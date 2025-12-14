@@ -2,6 +2,13 @@
 
 This document defines the conventions, philosophy, and technical standards for the HTML Tools collection.
 
+## Project Information
+
+- **GitHub Repository**: https://github.com/kylestratis/html-tools
+- **GitHub Username**: kylestratis
+- **Live Site**: https://tools.kylestratis.com
+- **Repository Name**: html-tools
+
 ## Core Philosophy
 
 **Simplicity above all else.** These tools prioritize:
