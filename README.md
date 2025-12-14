@@ -1,31 +1,50 @@
-# Vibe Counter
+# HTML Tools
 
-A simple, elegant text analysis tool that provides real-time statistics for any text you paste or type.
+A collection of simple, single-page HTML tools. Each tool runs entirely in your browser with no server-side processing, no frameworks, and no dependencies.
 
-## Features
+**Live Site**: [tools.kylestratis.com](https://tools.kylestratis.com)
 
-- **Character Count**: Total characters including spaces
-- **Character Count (No Spaces)**: Characters excluding whitespace
-- **Letter Count**: Alphabetic characters only
-- **Word Count**: Total number of words
-- **Real-time Updates**: Statistics update as you type
-- **Responsive Design**: Works on desktop and mobile devices
-- **Clean Interface**: Modern gradient design with an intuitive layout
+## Philosophy
 
-## Usage
+These tools follow a simple philosophy:
+- **Zero dependencies**: Just HTML, CSS, and vanilla JavaScript
+- **Privacy-first**: All processing happens in your browser
+- **Fast and lightweight**: No build steps, no bloat
+- **Accessible**: Works on any modern browser
+- **Open source**: Free to use, modify, and learn from
 
-Simply open `index.html` in your web browser and start typing or paste text into the text area. Statistics will update automatically.
+## Available Tools
 
-## Demo
+### [Vibe Counter](vibe-counter.html)
+A real-time text analysis tool that counts characters, words, and letters as you type.
 
-Visit [vibe-counter.kylestratis.com](https://vibe-counter.kylestratis.com) to try it out.
+**Features:**
+- Character count (with and without spaces)
+- Letter count (alphabetic characters only)
+- Word count
+- Real-time updates as you type
+- Clean, responsive interface
+
+## Adding New Tools
+
+Each tool is a standalone HTML file with inline CSS and JavaScript. To add a new tool:
+
+1. Create a new `.html` file in the root directory
+2. Add the tool to the list in `index.html`
+3. Update this README with the tool description
+4. Commit and push to deploy
 
 ## Technical Details
 
-- Single HTML file with inline CSS and JavaScript
-- No dependencies or external libraries required
-- Fully client-side - no data leaves your browser
-- Lightweight and fast
+- All tools are single HTML files with inline styles and scripts
+- No external dependencies or frameworks
+- No data collection or analytics
+- Works offline once loaded
+- Mobile-responsive
+
+## Local Development
+
+Simply open `index.html` or any tool file in your browser. No build process required.
 
 ## License
 
