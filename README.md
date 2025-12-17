@@ -25,6 +25,16 @@ A real-time text analysis tool that counts characters, words, and letters as you
 - Real-time updates as you type
 - Clean, responsive interface
 
+### [Word Matching Game](word-matching-game.html)
+A fun interactive game where you find the word that matches the circled word.
+
+**Features:**
+- Randomly generated word puzzles with 3-4 letter words
+- Visual interface with canvas-based word display
+- Click-to-select interaction
+- Instant feedback on answers
+- Unlimited replays with the refresh button
+
 ## Adding New Tools
 
 Each tool is a standalone HTML file with inline CSS and JavaScript. To add a new tool:
