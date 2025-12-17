@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Word Matching Game - HTML Tools</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 800px;
+            width: 100%;
+        }
+
+        h1 {
+            color: #667eea;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+
+        .instructions {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 16px;
+            line-height: 1.6;
+        }
+
+        .game-area {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        canvas {
+            display: block;
+            margin: 0 auto;
+            background: white;
+            border-radius: 10px;
+            cursor: pointer;
+            max-width: 100%;
+            height: auto;
+        }
+
+        .controls {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 25px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .message {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 18px;
+            font-weight: 600;
+            min-height: 30px;
+        }
+
+        .message.correct {
+            color: #28a745;
+        }
+
+        .message.incorrect {
+            color: #dc3545;
+        }
+
+        .message.info {
+            color: #667eea;
+        }
+
+        .footer {
+            margin-top: 30px;
+            text-align: center;
+            color: #666;
+            font-size: 14px;
+        }
+
+        .footer a {
+            color: #667eea;
+            text-decoration: none;
+        }
+
+        .footer a:hover {
+            text-decoration: underline;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 20px;
+            }
+
+            h1 {
+                font-size: 24px;
+            }
+
+            .instructions {
+                font-size: 14px;
+            }
+
+            button {
+                padding: 10px 20px;
+                font-size: 14px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎯 Word Matching Game</h1>
+        <p class="instructions">
+            Find the word that matches the circled word! Click on the matching word and press Submit to check your answer.
+        </p>
+
+        <div class="game-area">
+            <canvas id="gameCanvas" width="700" height="400"></canvas>
+        </div>
+
+        <div class="controls">
+            <button id="refreshBtn">🔄 New Game</button>
+            <button id="submitBtn" disabled>✓ Submit Answer</button>
+        </div>
+
+        <div id="message" class="message"></div>
+
+        <div class="footer">
+            <a href="index.html">← Back to HTML Tools</a>
+        </div>
+    </div>
+
+    <script>
+        // Word pool (3-4 letter words)
+        const wordPool = [
+            'cat', 'dog', 'hat', 'bat', 'rat', 'mat', 'sat', 'pat',
+            'car', 'bar', 'far', 'jar', 'tar', 'war', 'run', 'sun',
+            'fun', 'bun', 'gun', 'cut', 'but', 'put', 'nut', 'hut',
+            'red', 'bed', 'led', 'fed', 'wed', 'pen', 'hen', 'ten',
+            'men', 'den', 'fox', 'box', 'mix', 'fix', 'six', 'wax',
+            'tree', 'free', 'flee', 'knee', 'moon', 'soon', 'noon', 'boon',
+            'star', 'scar', 'char', 'grab', 'crab', 'flag', 'drag', 'snag',
+            'ship', 'chip', 'trip', 'drip', 'flip', 'slip', 'clip', 'skip',
+            'blue', 'glue', 'clue', 'true', 'frog', 'blog', 'clog', 'smog',
+            'rain', 'pain', 'main', 'gain', 'snow', 'slow', 'glow', 'flow'
+        ];
+
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const refreshBtn = document.getElementById('refreshBtn');
+        const submitBtn = document.getElementById('submitBtn');
+        const messageEl = document.getElementById('message');
+
+        let words = [];
+        let wordPositions = [];
+        let circledIndex = -1;
+        let matchingIndex = -1;
+        let selectedIndex = -1;
+
+        // Initialize game
+        function initGame() {
+            // Select 4 unique words + 1 duplicate
+            const uniqueWords = [];
+            while (uniqueWords.length < 4) {
+                const word = wordPool[Math.floor(Math.random() * wordPool.length)];
+                if (!uniqueWords.includes(word)) {
+                    uniqueWords.push(word);
+                }
+            }
+
+            // Pick one word to duplicate
+            const duplicateWord = uniqueWords[Math.floor(Math.random() * uniqueWords.length)];
+
+            // Create array of 5 words (4 unique + 1 duplicate)
+            words = [...uniqueWords, duplicateWord];
+
+            // Shuffle the words
+            for (let i = words.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [words[i], words[j]] = [words[j], words[i]];
+            }
+
+            // Find the indices of the duplicate word
+            const duplicateIndices = [];
+            words.forEach((word, index) => {
+                if (word === duplicateWord) {
+                    duplicateIndices.push(index);
+                }
+            });
+
+            // One will be circled, the other is the answer
+            circledIndex = duplicateIndices[0];
+            matchingIndex = duplicateIndices[1];
+
+            // Generate random positions for words
+            wordPositions = [];
+            const margin = 80;
+            const canvasWidth = canvas.width;
+            const canvasHeight = canvas.height;
+
+            for (let i = 0; i < words.length; i++) {
+                let x, y, tooClose;
+                let attempts = 0;
+
+                do {
+                    tooClose = false;
+                    x = margin + Math.random() * (canvasWidth - margin * 2);
+                    y = margin + Math.random() * (canvasHeight - margin * 2);
+
+                    // Check distance from other words
+                    for (let pos of wordPositions) {
+                        const dist = Math.sqrt((x - pos.x) ** 2 + (y - pos.y) ** 2);
+                        if (dist < 100) {
+                            tooClose = true;
+                            break;
+                        }
+                    }
+
+                    attempts++;
+                    if (attempts > 50) break; // Prevent infinite loop
+                } while (tooClose);
+
+                wordPositions.push({ x, y });
+            }
+
+            selectedIndex = -1;
+            submitBtn.disabled = true;
+            messageEl.textContent = '';
+            messageEl.className = 'message';
+
+            drawGame();
+        }
+
+        function drawGame() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Draw words
+            ctx.font = 'bold 32px Arial';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+
+            words.forEach((word, index) => {
+                const pos = wordPositions[index];
+
+                // Draw circle around the target word
+                if (index === circledIndex) {
+                    ctx.strokeStyle = '#667eea';
+                    ctx.lineWidth = 4;
+                    ctx.beginPath();
+                    ctx.arc(pos.x, pos.y, 45, 0, 2 * Math.PI);
+                    ctx.stroke();
+                }
+
+                // Highlight selected word
+                if (index === selectedIndex) {
+                    ctx.fillStyle = '#fff3cd';
+                    ctx.beginPath();
+                    ctx.arc(pos.x, pos.y, 40, 0, 2 * Math.PI);
+                    ctx.fill();
+                }
+
+                // Draw word
+                ctx.fillStyle = '#333';
+                ctx.fillText(word, pos.x, pos.y);
+            });
+        }
+
+        function handleCanvasClick(event) {
+            const rect = canvas.getBoundingClientRect();
+            const scaleX = canvas.width / rect.width;
+            const scaleY = canvas.height / rect.height;
+            const x = (event.clientX - rect.left) * scaleX;
+            const y = (event.clientY - rect.top) * scaleY;
+
+            // Check if click is near any word
+            selectedIndex = -1;
+            for (let i = 0; i < wordPositions.length; i++) {
+                const pos = wordPositions[i];
+                const dist = Math.sqrt((x - pos.x) ** 2 + (y - pos.y) ** 2);
+
+                if (dist < 45) {
+                    // Don't allow selecting the circled word
+                    if (i !== circledIndex) {
+                        selectedIndex = i;
+                        submitBtn.disabled = false;
+                        messageEl.textContent = '';
+                        messageEl.className = 'message';
+                    } else {
+                        messageEl.textContent = 'You can\'t select the circled word!';
+                        messageEl.className = 'message info';
+                    }
+                    break;
+                }
+            }
+
+            if (selectedIndex === -1) {
+                submitBtn.disabled = true;
+            }
+
+            drawGame();
+        }
+
+        function checkAnswer() {
+            if (selectedIndex === -1) return;
+
+            if (selectedIndex === matchingIndex) {
+                messageEl.textContent = '🎉 Correct! You found the matching word!';
+                messageEl.className = 'message correct';
+                submitBtn.disabled = true;
+            } else {
+                messageEl.textContent = `❌ Incorrect. Try again! (Selected: "${words[selectedIndex]}", Target: "${words[circledIndex]}")`;
+                messageEl.className = 'message incorrect';
+                selectedIndex = -1;
+                submitBtn.disabled = true;
+                drawGame();
+            }
+        }
+
+        // Event listeners
+        refreshBtn.addEventListener('click', initGame);
+        submitBtn.addEventListener('click', checkAnswer);
+        canvas.addEventListener('click', handleCanvasClick);
+
+        // Handle canvas responsiveness
+        function resizeCanvas() {
+            const container = canvas.parentElement;
+            const maxWidth = container.clientWidth - 40;
+            if (maxWidth < 700) {
+                canvas.style.width = maxWidth + 'px';
+                canvas.style.height = (maxWidth * 400 / 700) + 'px';
+            } else {
+                canvas.style.width = '700px';
+                canvas.style.height = '400px';
+            }
+        }
+
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        // Start first game
+        initGame();
+    </script>
+</body>
+</html>
