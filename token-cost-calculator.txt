@@ -1,0 +1,18 @@
+AI Token Cost Calculator - User Prompts
+========================================
+
+Date: December 18, 2024
+
+---
+
+PROMPT 1:
+I'd like to create a tool that takes any text as input as well as have has a drop-down that has all of the major AI models and estimates the token cost of the input text. It should be interpreted as a prompt so input tokens it should calculate or at least use an external calculator to calculate the token count and cost of the text. Also, add to the cloud file that for every conversation that results in a new tool, a text file with the same name as the HTML file should be saved with the conversation that generated that file.
+
+---
+
+PROMPT 2:
+Let's use TikToken or TikToken. Estimates warning and pricing hard-coded are fine. I do believe Anthropic has a token count API endpoint. That is v1/messages/count_tokens. It may need an API key. In that case, we should prompt the user for an API key and tell them it's only being stored in local storage, stored only in local storage, so that we can count the tokens. And if they decline to provide the API key, we'll just default to using our estimate.
+
+---
+
+END OF CONVERSATION LOG

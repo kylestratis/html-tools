@@ -28,9 +28,13 @@ This document defines the conventions, philosophy, and technical standards for t
 html-tools/
 ├── index.html           # Landing page listing all tools
 ├── tool-name.html       # Individual tool (kebab-case naming)
+├── tool-name.txt        # (Optional) Conversation that generated the tool
 ├── another-tool.html
+├── another-tool.txt     # (Optional) Conversation record
 └── README.md
 ```
+
+**Note:** `.txt` files are optional and only used for AI-generated tools to preserve the conversation history.
 
 ### Tool Architecture
 
@@ -341,6 +345,62 @@ git push
 ```
 
 GitHub Pages will automatically deploy the update.
+
+### 5. Document the Conversation (AI-Generated Tools Only)
+
+**When a tool is created through an AI conversation (e.g., Claude Code, ChatGPT):**
+
+Create a text file with the same name as the HTML file to preserve the conversation that generated it:
+
+```bash
+# For tool: token-cost-calculator.html
+# Create: token-cost-calculator.txt
+```
+
+**File Structure:**
+```
+html-tools/
+├── token-cost-calculator.html    # The tool
+├── token-cost-calculator.txt     # The conversation that created it
+├── another-tool.html
+├── another-tool.txt
+└── ...
+```
+
+**What to include in the conversation file:**
+- Only the user's prompts from the conversation
+- Date of creation
+- Simple format with each prompt numbered
+
+**Example format:**
+```
+Tool Name - User Prompts
+========================
+
+Date: December 18, 2024
+
+---
+
+PROMPT 1:
+[User's first prompt here]
+
+---
+
+PROMPT 2:
+[User's second prompt here]
+
+---
+
+END OF CONVERSATION LOG
+```
+
+**Why:**
+- Provides context for what the user originally requested
+- Documents the requirements without implementation clutter
+- Helps understand the tool's purpose
+- Useful for future modifications
+
+**Note:** This is only required for AI-generated tools. Tools created manually don't need this documentation unless the developer finds it helpful.
 
 ## Design Patterns
 
