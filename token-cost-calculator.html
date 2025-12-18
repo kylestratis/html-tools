@@ -17,6 +17,9 @@
             --success-bg: #d4edda;
             --success-border: #28a745;
             --success-text: #155724;
+            /* Gradient background colors for light mode */
+            --bg-gradient-start: #667eea;
+            --bg-gradient-end: #764ba2;
         }
 
         body.dark-mode {
@@ -30,10 +33,13 @@
             --success-bg: #1e3a28;
             --success-border: #28a745;
             --success-text: #7dcea0;
+            /* Gradient background colors for dark mode */
+            --bg-gradient-start: #1a1a2e;
+            --bg-gradient-end: #16213e;
         }
 
         body {
-            background: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-secondary) 100%);
+            background: linear-gradient(135deg, var(--bg-gradient-start) 0%, var(--bg-gradient-end) 100%);
             min-height: 100vh;
             padding: 40px 20px;
         }
@@ -596,7 +602,16 @@
             const className = type === 'success' ? 'success' : type === 'warning' ? 'warning' : 'info';
             statusMessage.innerHTML = `<div class="${className}">${message}</div>`;
             setTimeout(() => {
-                statusMessage.innerHTML = '';
+                // After timeout, restore persistent tip if using Claude models with estimates
+                const selectedModel = modelSelect.value;
+                const model = modelPricing[selectedModel];
+                const method = tokenMethod.textContent;
+
+                if (model && model.apiModel && method === '(Estimated)') {
+                    statusMessage.innerHTML = '<div class="info">💡 <strong>Tip:</strong> For exact token counts with Claude models, add your Anthropic API key via the ⚙️ settings button.</div>';
+                } else {
+                    statusMessage.innerHTML = '';
+                }
             }, 5000);
         }
 
@@ -752,9 +767,12 @@
             inputPrice.textContent = `$${model.input.toFixed(2)}/1M tokens`;
             outputPrice.textContent = `$${model.output.toFixed(2)}/1M tokens`;
 
-            // Show Anthropic API key suggestion if using estimates for Anthropic models
+            // Show persistent Anthropic API key suggestion if using estimates for Anthropic models
             if (model.apiModel && method === '(Estimated)') {
-                showStatus('💡 <strong>Tip:</strong> For exact token counts with Claude models, add your Anthropic API key via the ⚙️ settings button.', 'info');
+                statusMessage.innerHTML = '<div class="info">💡 <strong>Tip:</strong> For exact token counts with Claude models, add your Anthropic API key via the ⚙️ settings button.</div>';
+            } else {
+                // Clear the tip if not using Claude models with estimates
+                statusMessage.innerHTML = '';
             }
         }
 
