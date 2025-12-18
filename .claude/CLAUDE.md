@@ -368,16 +368,37 @@ html-tools/
 ```
 
 **What to include in the conversation file:**
-- The original user request/prompt
-- Key implementation decisions discussed
-- Any challenges or iterations during development
-- Final implementation notes
+- Only the user's prompts from the conversation
+- Date of creation
+- Simple format with each prompt numbered
+
+**Example format:**
+```
+Tool Name - User Prompts
+========================
+
+Date: December 18, 2024
+
+---
+
+PROMPT 1:
+[User's first prompt here]
+
+---
+
+PROMPT 2:
+[User's second prompt here]
+
+---
+
+END OF CONVERSATION LOG
+```
 
 **Why:**
-- Provides context for future modifications
-- Documents the design rationale
-- Helps understand the tool's evolution
-- Useful for learning and reference
+- Provides context for what the user originally requested
+- Documents the requirements without implementation clutter
+- Helps understand the tool's purpose
+- Useful for future modifications
 
 **Note:** This is only required for AI-generated tools. Tools created manually don't need this documentation unless the developer finds it helpful.
 
