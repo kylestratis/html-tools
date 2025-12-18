@@ -5,6 +5,42 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Word Matching Game - HTML Tools</title>
     <style>
+        :root {
+            --bg-gradient-start: #667eea;
+            --bg-gradient-end: #764ba2;
+            --container-bg: #ffffff;
+            --text-primary: #667eea;
+            --text-secondary: #666;
+            --game-area-bg: #f8f9fa;
+            --canvas-bg: #ffffff;
+            --canvas-text: #333;
+            --canvas-circle: #667eea;
+            --canvas-highlight: #fff3cd;
+            --button-gradient-start: #667eea;
+            --button-gradient-end: #764ba2;
+            --shadow: rgba(0, 0, 0, 0.3);
+            --toggle-bg: #ffffff;
+            --toggle-border: rgba(255, 255, 255, 0.3);
+        }
+
+        body.dark-mode {
+            --bg-gradient-start: #1a1a2e;
+            --bg-gradient-end: #16213e;
+            --container-bg: #2d2d2d;
+            --text-primary: #8b9eff;
+            --text-secondary: #b0b0b0;
+            --game-area-bg: #1a1a1a;
+            --canvas-bg: #3a3a3a;
+            --canvas-text: #e0e0e0;
+            --canvas-circle: #8b9eff;
+            --canvas-highlight: #4a4a2a;
+            --button-gradient-start: #4a5fa8;
+            --button-gradient-end: #6d4a8a;
+            --shadow: rgba(0, 0, 0, 0.5);
+            --toggle-bg: #2d2d2d;
+            --toggle-border: rgba(255, 255, 255, 0.2);
+        }
+
         * {
             margin: 0;
             padding: 0;
@@ -13,52 +49,56 @@
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, var(--bg-gradient-start) 0%, var(--bg-gradient-end) 100%);
             min-height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
             padding: 20px;
+            transition: background 0.3s ease;
         }
 
         .container {
-            background: white;
+            background: var(--container-bg);
             border-radius: 20px;
             padding: 40px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 20px 60px var(--shadow);
             max-width: 800px;
             width: 100%;
+            transition: background-color 0.3s ease;
         }
 
         h1 {
-            color: #667eea;
+            color: var(--text-primary);
             margin-bottom: 10px;
             text-align: center;
         }
 
         .instructions {
             text-align: center;
-            color: #666;
+            color: var(--text-secondary);
             margin-bottom: 30px;
             font-size: 16px;
             line-height: 1.6;
         }
 
         .game-area {
-            background: #f8f9fa;
+            background: var(--game-area-bg);
             border-radius: 10px;
             padding: 20px;
             margin-bottom: 20px;
+            transition: background-color 0.3s ease;
         }
 
         canvas {
             display: block;
             margin: 0 auto;
-            background: white;
+            background: var(--canvas-bg);
             border-radius: 10px;
             cursor: pointer;
             max-width: 100%;
             height: auto;
+            transition: background-color 0.3s ease;
         }
 
         .controls {
@@ -69,7 +109,7 @@
         }
 
         button {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, var(--button-gradient-start) 0%, var(--button-gradient-end) 100%);
             color: white;
             border: none;
             padding: 12px 30px;
@@ -77,7 +117,7 @@
             font-size: 16px;
             font-weight: 600;
             cursor: pointer;
-            transition: transform 0.2s, box-shadow 0.2s;
+            transition: transform 0.2s, box-shadow 0.2s, background 0.3s ease;
         }
 
         button:hover {
@@ -93,6 +133,30 @@
             background: #ccc;
             cursor: not-allowed;
             transform: none;
+        }
+
+        .theme-toggle {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: var(--toggle-bg);
+            border: 2px solid var(--toggle-border);
+            border-radius: 50px;
+            padding: 10px 20px;
+            cursor: pointer;
+            font-size: 20px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s ease;
+            z-index: 1000;
+        }
+
+        .theme-toggle:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .theme-toggle:active {
+            transform: scale(0.95);
         }
 
         .message {
@@ -118,12 +182,12 @@
         .footer {
             margin-top: 30px;
             text-align: center;
-            color: #666;
+            color: var(--text-secondary);
             font-size: 14px;
         }
 
         .footer a {
-            color: #667eea;
+            color: var(--text-primary);
             text-decoration: none;
         }
 
@@ -148,10 +212,21 @@
                 padding: 10px 20px;
                 font-size: 14px;
             }
+
+            .theme-toggle {
+                top: 10px;
+                right: 10px;
+                padding: 8px 16px;
+                font-size: 18px;
+            }
         }
     </style>
 </head>
 <body>
+    <button class="theme-toggle" id="themeToggle" aria-label="Toggle dark mode">
+        <span class="theme-icon">🌙</span>
+    </button>
+
     <div class="container">
         <h1>🎯 Word Matching Game</h1>
         <p class="instructions">
@@ -276,7 +351,16 @@
         }
 
         function drawGame() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            // Get current theme colors
+            const isDarkMode = document.body.classList.contains('dark-mode');
+            const canvasBg = getComputedStyle(document.documentElement).getPropertyValue('--canvas-bg').trim();
+            const canvasText = getComputedStyle(document.documentElement).getPropertyValue('--canvas-text').trim();
+            const canvasCircle = getComputedStyle(document.documentElement).getPropertyValue('--canvas-circle').trim();
+            const canvasHighlight = getComputedStyle(document.documentElement).getPropertyValue('--canvas-highlight').trim();
+
+            // Clear with background color
+            ctx.fillStyle = canvasBg;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
 
             // Draw words
             ctx.font = 'bold 32px Arial';
@@ -288,7 +372,7 @@
 
                 // Draw circle around the target word
                 if (index === circledIndex) {
-                    ctx.strokeStyle = '#667eea';
+                    ctx.strokeStyle = canvasCircle;
                     ctx.lineWidth = 4;
                     ctx.beginPath();
                     ctx.arc(pos.x, pos.y, 45, 0, 2 * Math.PI);
@@ -297,14 +381,14 @@
 
                 // Highlight selected word
                 if (index === selectedIndex) {
-                    ctx.fillStyle = '#fff3cd';
+                    ctx.fillStyle = canvasHighlight;
                     ctx.beginPath();
                     ctx.arc(pos.x, pos.y, 40, 0, 2 * Math.PI);
                     ctx.fill();
                 }
 
                 // Draw word
-                ctx.fillStyle = '#333';
+                ctx.fillStyle = canvasText;
                 ctx.fillText(word, pos.x, pos.y);
             });
         }
@@ -383,6 +467,53 @@
 
         // Start first game
         initGame();
+
+        // Dark mode functionality
+        const themeToggle = document.getElementById('themeToggle');
+        const themeIcon = themeToggle.querySelector('.theme-icon');
+
+        // Check for saved theme preference or default to system preference
+        function getPreferredTheme() {
+            const savedTheme = localStorage.getItem('theme');
+            if (savedTheme) {
+                return savedTheme;
+            }
+            return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+        }
+
+        // Set theme
+        function setTheme(theme) {
+            if (theme === 'dark') {
+                document.body.classList.add('dark-mode');
+                themeIcon.textContent = '☀️';
+            } else {
+                document.body.classList.remove('dark-mode');
+                themeIcon.textContent = '🌙';
+            }
+            localStorage.setItem('theme', theme);
+            // Redraw canvas with new colors
+            drawGame();
+        }
+
+        // Toggle theme
+        function toggleTheme() {
+            const currentTheme = document.body.classList.contains('dark-mode') ? 'dark' : 'light';
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            setTheme(newTheme);
+        }
+
+        // Initialize theme on page load
+        setTheme(getPreferredTheme());
+
+        // Listen for toggle button clicks
+        themeToggle.addEventListener('click', toggleTheme);
+
+        // Listen for system theme changes
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
+            if (!localStorage.getItem('theme')) {
+                setTheme(e.matches ? 'dark' : 'light');
+            }
+        });
     </script>
 </body>
 </html>

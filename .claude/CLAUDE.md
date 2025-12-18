@@ -60,6 +60,7 @@ Each tool MUST:
 - Mobile-first responsive design
 - Consistent color scheme across tools (currently purple gradient: `#667eea` to `#764ba2`)
 - Clean, readable styles with appropriate spacing
+- **MUST include dark mode support** (see Dark Mode Implementation section below)
 
 ### JavaScript
 - Use vanilla JavaScript (no libraries unless essential)
@@ -74,6 +75,208 @@ When tools need to remember data:
 - **URL parameters**: For shareable state and bookmarkable configurations
 - **localStorage**: For secrets (API keys) and larger datasets that shouldn't be in URLs
 - **Never use servers**: All state management is client-side only
+
+## Dark Mode Implementation
+
+**ALL tools MUST include dark mode support.** This is a required feature for both existing and new tools.
+
+### Requirements
+
+1. **Respect system preference**: Check `prefers-color-scheme` media query
+2. **Manual toggle**: Provide a button to override system preference
+3. **Persistent choice**: Store user's manual selection in localStorage
+4. **Consistent across all pages**: Dark mode preference persists across all tools
+5. **Smooth transitions**: Use CSS transitions for theme switching
+
+### Implementation Pattern
+
+#### 1. CSS Variables (in `<style>` block)
+
+Define color variables for light mode (`:root`) and dark mode (`body.dark-mode`):
+
+```css
+:root {
+    /* Light mode colors */
+    --bg-primary: #f8f9fa;
+    --bg-secondary: #ffffff;
+    --text-primary: #333;
+    --text-secondary: #666;
+    --border-color: #e0e0e0;
+    --accent-primary: #667eea;
+    --accent-secondary: #764ba2;
+    /* Add more as needed for your tool */
+}
+
+body.dark-mode {
+    /* Dark mode colors */
+    --bg-primary: #1a1a1a;
+    --bg-secondary: #2d2d2d;
+    --text-primary: #e0e0e0;
+    --text-secondary: #b0b0b0;
+    --border-color: #404040;
+    --accent-primary: #8b9eff;
+    --accent-secondary: #9d6bc7;
+    /* Override all light mode variables */
+}
+
+/* Use variables in your styles */
+body {
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+```
+
+#### 2. Toggle Button (in `<style>` block)
+
+```css
+.theme-toggle {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: var(--bg-secondary);
+    border: 2px solid var(--border-color);
+    border-radius: 50px;
+    padding: 10px 20px;
+    cursor: pointer;
+    font-size: 20px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+    transition: all 0.3s ease;
+    z-index: 1000;
+}
+
+.theme-toggle:hover {
+    transform: scale(1.05);
+}
+
+@media (max-width: 600px) {
+    .theme-toggle {
+        top: 10px;
+        right: 10px;
+        padding: 8px 16px;
+        font-size: 18px;
+    }
+}
+```
+
+#### 3. HTML Toggle Button (in `<body>`)
+
+Add this as the first element inside `<body>`:
+
+```html
+<button class="theme-toggle" id="themeToggle" aria-label="Toggle dark mode">
+    <span class="theme-icon">🌙</span>
+</button>
+```
+
+#### 4. JavaScript (in `<script>` block)
+
+Add this at the end of your JavaScript:
+
+```javascript
+// Dark mode functionality
+const themeToggle = document.getElementById('themeToggle');
+const themeIcon = themeToggle.querySelector('.theme-icon');
+
+// Check for saved theme preference or default to system preference
+function getPreferredTheme() {
+    const savedTheme = localStorage.getItem('theme');
+    if (savedTheme) {
+        return savedTheme;
+    }
+    return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+}
+
+// Set theme
+function setTheme(theme) {
+    if (theme === 'dark') {
+        document.body.classList.add('dark-mode');
+        themeIcon.textContent = '☀️';
+    } else {
+        document.body.classList.remove('dark-mode');
+        themeIcon.textContent = '🌙';
+    }
+    localStorage.setItem('theme', theme);
+}
+
+// Toggle theme
+function toggleTheme() {
+    const currentTheme = document.body.classList.contains('dark-mode') ? 'dark' : 'light';
+    const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+    setTheme(newTheme);
+}
+
+// Initialize theme on page load
+setTheme(getPreferredTheme());
+
+// Listen for toggle button clicks
+themeToggle.addEventListener('click', toggleTheme);
+
+// Listen for system theme changes
+window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
+    if (!localStorage.getItem('theme')) {
+        setTheme(e.matches ? 'dark' : 'light');
+    }
+});
+```
+
+### Special Considerations
+
+#### For Canvas-based Tools
+
+If your tool uses the Canvas API, you'll need to redraw when the theme changes:
+
+```javascript
+// In setTheme function, add:
+function setTheme(theme) {
+    // ... existing theme setting code ...
+
+    // Redraw canvas with new colors if applicable
+    if (typeof drawGame === 'function') {
+        drawGame();
+    }
+}
+
+// In your draw function, get colors from CSS variables:
+function drawCanvas() {
+    const textColor = getComputedStyle(document.documentElement)
+        .getPropertyValue('--canvas-text').trim();
+    ctx.fillStyle = textColor;
+    // ... rest of drawing code
+}
+```
+
+#### For Gradient Backgrounds
+
+For tools with gradient backgrounds, define gradient colors as CSS variables:
+
+```css
+:root {
+    --bg-gradient-start: #667eea;
+    --bg-gradient-end: #764ba2;
+}
+
+body.dark-mode {
+    --bg-gradient-start: #1a1a2e;
+    --bg-gradient-end: #16213e;
+}
+
+body {
+    background: linear-gradient(135deg, var(--bg-gradient-start) 0%, var(--bg-gradient-end) 100%);
+}
+```
+
+### Testing Dark Mode
+
+Before committing, verify:
+- [ ] Theme toggle button is visible and accessible
+- [ ] All text is readable in both modes
+- [ ] All interactive elements work in both modes
+- [ ] Theme preference persists across page reloads
+- [ ] System preference is respected on first visit
+- [ ] Manual toggle overrides system preference
+- [ ] Transitions are smooth (not jarring)
+- [ ] Canvas/dynamic content updates with theme
 
 ## Adding a New Tool
 
@@ -190,6 +393,7 @@ Before committing a new tool, ensure:
 - [ ] Handles edge cases and errors gracefully
 - [ ] Code is readable and commented where necessary
 - [ ] Added to index.html and README.md
+- [ ] **Dark mode implemented and tested** (required for all tools)
 
 ## Anti-Patterns
 

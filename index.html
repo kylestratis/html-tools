@@ -5,6 +5,34 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Kyle Stratis - HTML Tools</title>
     <style>
+        :root {
+            --bg-primary: #f8f9fa;
+            --bg-secondary: #ffffff;
+            --bg-tertiary: #f0f2ff;
+            --text-primary: #333;
+            --text-secondary: #666;
+            --text-tertiary: #555;
+            --border-color: #e0e0e0;
+            --accent-primary: #667eea;
+            --accent-secondary: #764ba2;
+            --shadow: rgba(0, 0, 0, 0.1);
+            --shadow-hover: rgba(102, 126, 234, 0.2);
+        }
+
+        body.dark-mode {
+            --bg-primary: #1a1a1a;
+            --bg-secondary: #2d2d2d;
+            --bg-tertiary: #3a3a4f;
+            --text-primary: #e0e0e0;
+            --text-secondary: #b0b0b0;
+            --text-tertiary: #c0c0c0;
+            --border-color: #404040;
+            --accent-primary: #8b9eff;
+            --accent-secondary: #9d6bc7;
+            --shadow: rgba(0, 0, 0, 0.3);
+            --shadow-hover: rgba(139, 158, 255, 0.3);
+        }
+
         * {
             margin: 0;
             padding: 0;
@@ -14,34 +42,36 @@
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
             line-height: 1.6;
-            color: #333;
+            color: var(--text-primary);
             max-width: 800px;
             margin: 0 auto;
             padding: 40px 20px;
-            background: #f8f9fa;
+            background: var(--bg-primary);
+            transition: background-color 0.3s ease, color 0.3s ease;
         }
 
         header {
             margin-bottom: 60px;
             padding-bottom: 20px;
-            border-bottom: 3px solid #667eea;
+            border-bottom: 3px solid var(--accent-primary);
+            position: relative;
         }
 
         h1 {
             font-size: 2.5em;
             margin-bottom: 10px;
-            color: #667eea;
+            color: var(--accent-primary);
         }
 
         .subtitle {
             font-size: 1.2em;
-            color: #666;
+            color: var(--text-secondary);
             margin-bottom: 20px;
         }
 
         .intro {
             font-size: 1.1em;
-            color: #555;
+            color: var(--text-tertiary);
             margin-bottom: 10px;
         }
 
@@ -52,8 +82,8 @@
         .section-title {
             font-size: 1.8em;
             margin-bottom: 30px;
-            color: #333;
-            border-bottom: 2px solid #e0e0e0;
+            color: var(--text-primary);
+            border-bottom: 2px solid var(--border-color);
             padding-bottom: 10px;
         }
 
@@ -62,17 +92,17 @@
         }
 
         .tool-item {
-            background: white;
+            background: var(--bg-secondary);
             border-radius: 10px;
             padding: 25px;
             margin-bottom: 20px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 2px 10px var(--shadow);
             transition: transform 0.2s, box-shadow 0.2s;
         }
 
         .tool-item:hover {
             transform: translateY(-2px);
-            box-shadow: 0 4px 20px rgba(102, 126, 234, 0.2);
+            box-shadow: 0 4px 20px var(--shadow-hover);
         }
 
         .tool-item h3 {
@@ -81,17 +111,17 @@
         }
 
         .tool-item h3 a {
-            color: #667eea;
+            color: var(--accent-primary);
             text-decoration: none;
             transition: color 0.2s;
         }
 
         .tool-item h3 a:hover {
-            color: #764ba2;
+            color: var(--accent-secondary);
         }
 
         .tool-description {
-            color: #666;
+            color: var(--text-secondary);
             font-size: 1.05em;
             margin-bottom: 15px;
         }
@@ -105,8 +135,8 @@
         }
 
         .tool-features li {
-            background: #f0f2ff;
-            color: #667eea;
+            background: var(--bg-tertiary);
+            color: var(--accent-primary);
             padding: 5px 12px;
             border-radius: 15px;
             font-size: 0.9em;
@@ -115,13 +145,13 @@
         footer {
             margin-top: 60px;
             padding-top: 20px;
-            border-top: 2px solid #e0e0e0;
+            border-top: 2px solid var(--border-color);
             text-align: center;
-            color: #666;
+            color: var(--text-secondary);
         }
 
         footer a {
-            color: #667eea;
+            color: var(--accent-primary);
             text-decoration: none;
         }
 
@@ -133,15 +163,39 @@
             display: inline-block;
             margin-top: 20px;
             padding: 10px 20px;
-            background: #333;
-            color: white;
+            background: var(--text-primary);
+            color: var(--bg-primary);
             text-decoration: none;
             border-radius: 5px;
             transition: background 0.2s;
         }
 
         .github-link:hover {
-            background: #555;
+            opacity: 0.8;
+        }
+
+        .theme-toggle {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: var(--bg-secondary);
+            border: 2px solid var(--border-color);
+            border-radius: 50px;
+            padding: 10px 20px;
+            cursor: pointer;
+            font-size: 20px;
+            box-shadow: 0 2px 10px var(--shadow);
+            transition: all 0.3s ease;
+            z-index: 1000;
+        }
+
+        .theme-toggle:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 15px var(--shadow-hover);
+        }
+
+        .theme-toggle:active {
+            transform: scale(0.95);
         }
 
         @media (max-width: 600px) {
@@ -160,10 +214,21 @@
             .tool-item {
                 padding: 20px;
             }
+
+            .theme-toggle {
+                top: 10px;
+                right: 10px;
+                padding: 8px 16px;
+                font-size: 18px;
+            }
         }
     </style>
 </head>
 <body>
+    <button class="theme-toggle" id="themeToggle" aria-label="Toggle dark mode">
+        <span class="theme-icon">🌙</span>
+    </button>
+
     <header>
         <h1>HTML Tools</h1>
         <p class="subtitle">by Kyle Stratis</p>
@@ -220,5 +285,53 @@
         <p>&copy; 2025 <a href="https://kylestratis.com">Kyle Stratis</a></p>
         <p style="margin-top: 10px; font-size: 0.9em;">All tools run entirely in your browser. No data is collected or transmitted.</p>
     </footer>
+
+    <script>
+        // Dark mode functionality
+        const themeToggle = document.getElementById('themeToggle');
+        const themeIcon = themeToggle.querySelector('.theme-icon');
+
+        // Check for saved theme preference or default to system preference
+        function getPreferredTheme() {
+            const savedTheme = localStorage.getItem('theme');
+            if (savedTheme) {
+                return savedTheme;
+            }
+            return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+        }
+
+        // Set theme
+        function setTheme(theme) {
+            if (theme === 'dark') {
+                document.body.classList.add('dark-mode');
+                themeIcon.textContent = '☀️';
+            } else {
+                document.body.classList.remove('dark-mode');
+                themeIcon.textContent = '🌙';
+            }
+            localStorage.setItem('theme', theme);
+        }
+
+        // Toggle theme
+        function toggleTheme() {
+            const currentTheme = document.body.classList.contains('dark-mode') ? 'dark' : 'light';
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            setTheme(newTheme);
+        }
+
+        // Initialize theme on page load
+        setTheme(getPreferredTheme());
+
+        // Listen for toggle button clicks
+        themeToggle.addEventListener('click', toggleTheme);
+
+        // Listen for system theme changes (optional)
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
+            // Only auto-switch if user hasn't manually set a preference
+            if (!localStorage.getItem('theme')) {
+                setTheme(e.matches ? 'dark' : 'light');
+            }
+        });
+    </script>
 </body>
 </html>
