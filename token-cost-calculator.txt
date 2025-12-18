@@ -193,4 +193,175 @@ Modified:
 
 ---
 
+MAJOR UPDATE - December 18, 2024
+=================================
+
+ENHANCEMENT REQUEST:
+--------------------
+User requested:
+1. Integration with js-tiktoken library from CDN for accurate OpenAI token counting
+2. Integration with Anthropic's count_tokens API endpoint (v1/messages/count_tokens)
+3. Optional API key management for Anthropic API (stored in localStorage)
+4. Clear privacy messaging about local storage
+5. Fallback to estimates when API key is not provided
+6. More prominent estimates disclaimer
+
+RESEARCH FINDINGS:
+------------------
+
+1. Pricing APIs:
+   - No providers (OpenAI, Anthropic, Google, Meta, Mistral) offer pricing via API
+   - Pricing must remain hardcoded and manually updated
+   - Feature requests exist but not implemented
+
+2. Token Counting APIs:
+   - OpenAI: No API, but TikToken library available (js-tiktoken via CDN)
+   - Anthropic: Has free token counting API at v1/messages/count_tokens
+     * Requires API key
+     * Beta header: "token-counting-2024-11-01"
+     * Free to use (subject to rate limits)
+     * Returns exact token counts
+
+3. Selected Libraries:
+   - js-tiktoken v1.0.14 from jsDelivr CDN (~50-100KB)
+   - Pure JavaScript implementation
+   - Works perfectly client-side
+   - Supports o200k_base (GPT-4o) and cl100k_base (GPT-4, GPT-3.5) encodings
+
+IMPLEMENTATION DETAILS:
+-----------------------
+
+1. External Dependencies Added:
+   - js-tiktoken v1.0.14 via ES Module import from CDN
+   - Uses modern ES6 module syntax (type="module")
+   - Loads encodings on-demand
+
+2. API Key Management:
+   - Settings modal with gear icon (⚙️) button
+   - Password input for Anthropic API key
+   - localStorage key: 'anthropic_api_key'
+   - Clear privacy messaging about localStorage-only storage
+   - Save/Clear/Cancel buttons
+   - Modal can be closed by clicking outside
+
+3. Token Counting Logic:
+   Three methods based on model type:
+
+   a) OpenAI Models (TikToken):
+      - Uses js-tiktoken library
+      - Accurate token counts
+      - No API key needed
+      - Encodings: o200k_base, cl100k_base
+      - Caches encoders for performance
+
+   b) Claude Models (Anthropic API):
+      - Calls v1/messages/count_tokens endpoint
+      - Requires API key (optional)
+      - Falls back to estimates if no key
+      - Maps UI model names to API model IDs
+      - Handles 401 errors (invalid key)
+      - Shows status messages
+
+   c) Other Models (Estimates):
+      - Gemini, Llama, Mistral
+      - Uses 4:1 character-to-token ratio
+      - No tokenizer available
+
+4. UI Enhancements:
+   - Settings button next to dark mode toggle
+   - Token count shows method indicator: "(TikToken)", "(Anthropic API)", or "(Estimated)"
+   - Status message system with success/warning/info styles
+   - Enhanced info box explaining counting methods
+   - Modal overlay with dark mode support
+
+5. Model Mapping:
+   Added apiModel field to modelPricing object:
+   - claude-opus-4 → "claude-opus-4"
+   - claude-sonnet-4 → "claude-sonnet-4"
+   - claude-3.5-sonnet → "claude-3-5-sonnet-20241022"
+   - claude-3-opus → "claude-3-opus-20240229"
+   - claude-3-haiku → "claude-3-haiku-20240307"
+
+6. Error Handling:
+   - TikToken errors fall back to estimates
+   - Anthropic API errors fall back to estimates
+   - Invalid API key shows warning and clears from storage
+   - Network errors logged to console
+   - Graceful degradation throughout
+
+7. Privacy & Security:
+   - API key stored only in localStorage
+   - Never transmitted except to Anthropic's official API
+   - Clear privacy notice in settings modal
+   - Password input type for API key
+   - Autocomplete disabled
+
+NEW TECHNICAL FUNCTIONS:
+------------------------
+
+- getEncoder(encoding): Creates/retrieves cached TikToken encoders
+- countTokensWithTiktoken(text, encoding): Accurate OpenAI token counting
+- countTokensWithAnthropic(text, modelId): Calls Anthropic API
+- showStatus(message, type): Displays temporary status messages
+- Modal event handlers for settings management
+
+UPDATED UI ELEMENTS:
+--------------------
+
+- Settings button (top right, left of dark mode toggle)
+- Settings modal with API key input
+- Token method indicator next to token count
+- Status message container for feedback
+- Enhanced info box with method explanations
+- Warning/success/info message styles (dark mode compatible)
+
+CSS ADDITIONS:
+--------------
+
+- Modal overlay and content styles
+- Button styles (primary, secondary, danger)
+- Warning/success message colors
+- Settings button positioning
+- Token method indicator styling
+- Mobile-responsive modal
+
+SOURCES CONSULTED:
+------------------
+
+- Anthropic Claude API Documentation: https://docs.claude.com/en/api/messages-count-tokens
+- js-tiktoken CDN: https://www.jsdelivr.com/package/npm/js-tiktoken
+- OpenAI Pricing Endpoint Discussion: https://community.openai.com/t/...
+- AI Model Pricing Comparisons: https://api.chat/models/
+
+TESTING SCENARIOS:
+------------------
+
+1. OpenAI models: Accurate counts via TikToken (no API key needed)
+2. Claude models without API key: Falls back to estimates
+3. Claude models with valid API key: Exact counts via API
+4. Claude models with invalid API key: Warning shown, falls back to estimates
+5. Other models: Always use estimates
+6. Dark mode: All new UI elements support dark mode
+7. Mobile: Settings button repositions, modal is responsive
+
+FILES MODIFIED:
+---------------
+
+- token-cost-calculator.html (complete rewrite with new features)
+- token-cost-calculator.txt (this file, documenting the enhancement)
+
+BREAKING CHANGES:
+-----------------
+
+None - tool is backward compatible. New features are additive.
+
+DEPENDENCY ADDED:
+-----------------
+
+- js-tiktoken@1.0.14 from https://cdn.jsdelivr.net/npm/js-tiktoken@1.0.14/+esm
+- ~100KB additional load for accurate OpenAI token counting
+- Acceptable per project guidelines for lightweight external dependencies
+
+---
+
 END OF CONVERSATION LOG
