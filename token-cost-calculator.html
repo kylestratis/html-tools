@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Token Cost Calculator - HTML Tools</title>
+    <style>
+        :root {
+            /* Light mode colors */
+            --bg-primary: #f8f9fa;
+            --bg-secondary: #ffffff;
+            --text-primary: #333;
+            --text-secondary: #666;
+            --border-color: #e0e0e0;
+            --accent-primary: #667eea;
+            --accent-secondary: #764ba2;
+            --input-bg: #ffffff;
+            --shadow: rgba(0, 0, 0, 0.1);
+            --result-bg: #f0f4ff;
+            --result-border: #d0d8ff;
+        }
+
+        body.dark-mode {
+            /* Dark mode colors */
+            --bg-primary: #1a1a1a;
+            --bg-secondary: #2d2d2d;
+            --text-primary: #e0e0e0;
+            --text-secondary: #b0b0b0;
+            --border-color: #404040;
+            --accent-primary: #8b9eff;
+            --accent-secondary: #9d6bc7;
+            --input-bg: #2d2d2d;
+            --shadow: rgba(0, 0, 0, 0.3);
+            --result-bg: #2a2a3e;
+            --result-border: #404060;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-secondary) 100%);
+            min-height: 100vh;
+            padding: 40px 20px;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        .theme-toggle {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: var(--bg-secondary);
+            border: 2px solid var(--border-color);
+            border-radius: 50px;
+            padding: 10px 20px;
+            cursor: pointer;
+            font-size: 20px;
+            box-shadow: 0 2px 10px var(--shadow);
+            transition: all 0.3s ease;
+            z-index: 1000;
+        }
+
+        .theme-toggle:hover {
+            transform: scale(1.05);
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: var(--bg-secondary);
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px var(--shadow);
+            transition: background-color 0.3s ease;
+        }
+
+        h1 {
+            color: var(--text-primary);
+            margin-bottom: 10px;
+            font-size: 2.5em;
+            transition: color 0.3s ease;
+        }
+
+        .subtitle {
+            color: var(--text-secondary);
+            margin-bottom: 30px;
+            font-size: 1.1em;
+            transition: color 0.3s ease;
+        }
+
+        label {
+            display: block;
+            color: var(--text-primary);
+            margin-bottom: 10px;
+            font-weight: 600;
+            transition: color 0.3s ease;
+        }
+
+        textarea {
+            width: 100%;
+            min-height: 250px;
+            padding: 15px;
+            border: 2px solid var(--border-color);
+            border-radius: 10px;
+            font-size: 16px;
+            font-family: 'Courier New', monospace;
+            resize: vertical;
+            margin-bottom: 20px;
+            background: var(--input-bg);
+            color: var(--text-primary);
+            transition: all 0.3s ease;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: var(--accent-primary);
+        }
+
+        select {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid var(--border-color);
+            border-radius: 10px;
+            font-size: 16px;
+            margin-bottom: 20px;
+            background: var(--input-bg);
+            color: var(--text-primary);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        select:focus {
+            outline: none;
+            border-color: var(--accent-primary);
+        }
+
+        .results {
+            background: var(--result-bg);
+            border: 2px solid var(--result-border);
+            border-radius: 10px;
+            padding: 25px;
+            margin-top: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .result-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .result-row:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+
+        .result-label {
+            color: var(--text-secondary);
+            font-weight: 600;
+            font-size: 0.95em;
+            transition: color 0.3s ease;
+        }
+
+        .result-value {
+            color: var(--text-primary);
+            font-size: 1.3em;
+            font-weight: 700;
+            transition: color 0.3s ease;
+        }
+
+        .result-value.cost {
+            color: var(--accent-primary);
+            font-size: 1.5em;
+        }
+
+        .info {
+            background: var(--bg-primary);
+            border-left: 4px solid var(--accent-primary);
+            padding: 15px;
+            margin-top: 20px;
+            border-radius: 5px;
+            color: var(--text-secondary);
+            font-size: 0.9em;
+            transition: all 0.3s ease;
+        }
+
+        .model-details {
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px solid var(--border-color);
+            font-size: 0.85em;
+            color: var(--text-secondary);
+        }
+
+        .pricing-info {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .pricing-item {
+            background: var(--bg-primary);
+            padding: 8px;
+            border-radius: 5px;
+        }
+
+        .pricing-label {
+            font-size: 0.75em;
+            color: var(--text-secondary);
+            margin-bottom: 3px;
+        }
+
+        .pricing-value {
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 20px;
+            }
+
+            h1 {
+                font-size: 1.8em;
+            }
+
+            .theme-toggle {
+                top: 10px;
+                right: 10px;
+                padding: 8px 16px;
+                font-size: 18px;
+            }
+
+            .pricing-info {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <button class="theme-toggle" id="themeToggle" aria-label="Toggle dark mode">
+        <span class="theme-icon">🌙</span>
+    </button>
+
+    <div class="container">
+        <h1>🤖 AI Token Cost Calculator</h1>
+        <p class="subtitle">Estimate token count and cost for your AI prompts</p>
+
+        <label for="promptText">Enter your prompt:</label>
+        <textarea
+            id="promptText"
+            placeholder="Paste or type your prompt here...&#10;&#10;This tool estimates the number of tokens and calculates the cost based on the selected AI model's input token pricing."
+        ></textarea>
+
+        <label for="modelSelect">Select AI Model:</label>
+        <select id="modelSelect">
+            <optgroup label="OpenAI">
+                <option value="gpt-4o">GPT-4o</option>
+                <option value="gpt-4o-mini">GPT-4o-mini</option>
+                <option value="gpt-4-turbo">GPT-4 Turbo</option>
+                <option value="gpt-4">GPT-4</option>
+                <option value="gpt-3.5-turbo">GPT-3.5 Turbo</option>
+            </optgroup>
+            <optgroup label="Anthropic Claude">
+                <option value="claude-opus-4">Claude Opus 4</option>
+                <option value="claude-sonnet-4">Claude Sonnet 4</option>
+                <option value="claude-3.5-sonnet">Claude 3.5 Sonnet</option>
+                <option value="claude-3-opus">Claude 3 Opus</option>
+                <option value="claude-3-haiku">Claude 3 Haiku</option>
+            </optgroup>
+            <optgroup label="Google Gemini">
+                <option value="gemini-1.5-pro">Gemini 1.5 Pro</option>
+                <option value="gemini-1.5-flash">Gemini 1.5 Flash</option>
+                <option value="gemini-2.0-flash">Gemini 2.0 Flash</option>
+            </optgroup>
+            <optgroup label="Meta">
+                <option value="llama-3.3-70b">Llama 3.3 70B</option>
+                <option value="llama-3.1-405b">Llama 3.1 405B</option>
+            </optgroup>
+            <optgroup label="Mistral">
+                <option value="mistral-large">Mistral Large</option>
+                <option value="mistral-small">Mistral Small</option>
+            </optgroup>
+        </select>
+
+        <div class="results" id="results">
+            <div class="result-row">
+                <span class="result-label">Character Count:</span>
+                <span class="result-value" id="charCount">0</span>
+            </div>
+            <div class="result-row">
+                <span class="result-label">Estimated Tokens:</span>
+                <span class="result-value" id="tokenCount">0</span>
+            </div>
+            <div class="result-row">
+                <span class="result-label">Estimated Cost (Input):</span>
+                <span class="result-value cost" id="costValue">$0.00000</span>
+            </div>
+            <div class="model-details" id="modelDetails">
+                <div class="pricing-info">
+                    <div class="pricing-item">
+                        <div class="pricing-label">Input Price</div>
+                        <div class="pricing-value" id="inputPrice">-</div>
+                    </div>
+                    <div class="pricing-item">
+                        <div class="pricing-label">Output Price</div>
+                        <div class="pricing-value" id="outputPrice">-</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="info">
+            <strong>ℹ️ Note:</strong> Token counts are estimated using a 4:1 character-to-token ratio, which is typical for English text.
+            Actual token counts may vary depending on the specific tokenizer used by each model.
+            Prices are per million tokens and current as of December 2024.
+        </div>
+    </div>
+
+    <script>
+        // AI Model pricing data (input/output per 1M tokens)
+        const modelPricing = {
+            'gpt-4o': { input: 2.50, output: 10.00, name: 'GPT-4o' },
+            'gpt-4o-mini': { input: 0.15, output: 0.60, name: 'GPT-4o-mini' },
+            'gpt-4-turbo': { input: 10.00, output: 30.00, name: 'GPT-4 Turbo' },
+            'gpt-4': { input: 30.00, output: 60.00, name: 'GPT-4' },
+            'gpt-3.5-turbo': { input: 0.50, output: 1.50, name: 'GPT-3.5 Turbo' },
+            'claude-opus-4': { input: 15.00, output: 75.00, name: 'Claude Opus 4' },
+            'claude-sonnet-4': { input: 3.00, output: 15.00, name: 'Claude Sonnet 4' },
+            'claude-3.5-sonnet': { input: 3.00, output: 15.00, name: 'Claude 3.5 Sonnet' },
+            'claude-3-opus': { input: 15.00, output: 75.00, name: 'Claude 3 Opus' },
+            'claude-3-haiku': { input: 0.25, output: 1.25, name: 'Claude 3 Haiku' },
+            'gemini-1.5-pro': { input: 1.25, output: 5.00, name: 'Gemini 1.5 Pro' },
+            'gemini-1.5-flash': { input: 0.075, output: 0.30, name: 'Gemini 1.5 Flash' },
+            'gemini-2.0-flash': { input: 0.10, output: 0.40, name: 'Gemini 2.0 Flash' },
+            'llama-3.3-70b': { input: 0.35, output: 0.40, name: 'Llama 3.3 70B' },
+            'llama-3.1-405b': { input: 0.80, output: 0.80, name: 'Llama 3.1 405B' },
+            'mistral-large': { input: 2.00, output: 6.00, name: 'Mistral Large' },
+            'mistral-small': { input: 0.20, output: 0.60, name: 'Mistral Small' }
+        };
+
+        const promptText = document.getElementById('promptText');
+        const modelSelect = document.getElementById('modelSelect');
+        const charCount = document.getElementById('charCount');
+        const tokenCount = document.getElementById('tokenCount');
+        const costValue = document.getElementById('costValue');
+        const inputPrice = document.getElementById('inputPrice');
+        const outputPrice = document.getElementById('outputPrice');
+
+        // Estimate token count (approximately 4 characters per token for English)
+        function estimateTokens(text) {
+            if (!text) return 0;
+            // Simple estimation: ~4 characters per token
+            // This is a rough approximation used by many tokenizers
+            return Math.ceil(text.length / 4);
+        }
+
+        // Calculate cost based on token count and model
+        function calculateCost(tokens, modelKey) {
+            const model = modelPricing[modelKey];
+            if (!model) return 0;
+            // Cost per million tokens, so divide by 1,000,000
+            return (tokens * model.input) / 1000000;
+        }
+
+        // Format cost with appropriate precision
+        function formatCost(cost) {
+            if (cost === 0) return '$0.00000';
+            if (cost < 0.00001) return `$${cost.toExponential(2)}`;
+            if (cost < 0.01) return `$${cost.toFixed(5)}`;
+            if (cost < 1) return `$${cost.toFixed(4)}`;
+            return `$${cost.toFixed(2)}`;
+        }
+
+        // Update all calculations
+        function updateCalculations() {
+            const text = promptText.value;
+            const selectedModel = modelSelect.value;
+            const model = modelPricing[selectedModel];
+
+            // Character count
+            const chars = text.length;
+            charCount.textContent = chars.toLocaleString();
+
+            // Token count
+            const tokens = estimateTokens(text);
+            tokenCount.textContent = tokens.toLocaleString();
+
+            // Cost
+            const cost = calculateCost(tokens, selectedModel);
+            costValue.textContent = formatCost(cost);
+
+            // Model pricing details
+            if (model) {
+                inputPrice.textContent = `$${model.input.toFixed(2)}/1M tokens`;
+                outputPrice.textContent = `$${model.output.toFixed(2)}/1M tokens`;
+            }
+        }
+
+        // Event listeners
+        promptText.addEventListener('input', updateCalculations);
+        modelSelect.addEventListener('change', updateCalculations);
+
+        // Initialize with default model pricing
+        updateCalculations();
+
+        // Dark mode functionality
+        const themeToggle = document.getElementById('themeToggle');
+        const themeIcon = themeToggle.querySelector('.theme-icon');
+
+        // Check for saved theme preference or default to system preference
+        function getPreferredTheme() {
+            const savedTheme = localStorage.getItem('theme');
+            if (savedTheme) {
+                return savedTheme;
+            }
+            return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+        }
+
+        // Set theme
+        function setTheme(theme) {
+            if (theme === 'dark') {
+                document.body.classList.add('dark-mode');
+                themeIcon.textContent = '☀️';
+            } else {
+                document.body.classList.remove('dark-mode');
+                themeIcon.textContent = '🌙';
+            }
+            localStorage.setItem('theme', theme);
+        }
+
+        // Toggle theme
+        function toggleTheme() {
+            const currentTheme = document.body.classList.contains('dark-mode') ? 'dark' : 'light';
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            setTheme(newTheme);
+        }
+
+        // Initialize theme on page load
+        setTheme(getPreferredTheme());
+
+        // Listen for toggle button clicks
+        themeToggle.addEventListener('click', toggleTheme);
+
+        // Listen for system theme changes
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
+            if (!localStorage.getItem('theme')) {
+                setTheme(e.matches ? 'dark' : 'light');
+            }
+        });
+    </script>
+</body>
+</html>

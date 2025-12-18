@@ -35,6 +35,16 @@ A fun interactive game where you find the word that matches the circled word.
 - Instant feedback on answers
 - Unlimited replays with the refresh button
 
+### [AI Token Cost Calculator](token-cost-calculator.html)
+Estimate token counts and costs for AI model prompts with support for major AI providers.
+
+**Features:**
+- Character and token counting with real-time updates
+- 15+ AI models from OpenAI, Anthropic, Google, Meta, and Mistral
+- Input token cost estimates based on current pricing
+- Model-specific pricing information display
+- Dark mode support with persistent preferences
+
 ## Adding New Tools
 
 Each tool is a standalone HTML file with inline CSS and JavaScript. To add a new tool:
