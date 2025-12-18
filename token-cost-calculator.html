@@ -8,6 +8,8 @@
     <style>
         :root {
             /* Tool-specific colors */
+            --bg-gradient-start: #667eea;
+            --bg-gradient-end: #764ba2;
             --input-bg: #ffffff;
             --result-bg: #f0f4ff;
             --result-border: #d0d8ff;
@@ -21,6 +23,8 @@
 
         body.dark-mode {
             /* Tool-specific dark mode colors */
+            --bg-gradient-start: #1a1a2e;
+            --bg-gradient-end: #16213e;
             --input-bg: #2d2d2d;
             --result-bg: #2a2a3e;
             --result-border: #404060;
@@ -33,7 +37,7 @@
         }
 
         body {
-            background: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-secondary) 100%);
+            background: linear-gradient(135deg, var(--bg-gradient-start) 0%, var(--bg-gradient-end) 100%);
             min-height: 100vh;
             padding: 40px 20px;
         }
@@ -592,12 +596,14 @@
         });
 
         // Show status message
-        function showStatus(message, type = 'info') {
+        function showStatus(message, type = 'info', autoClear = true) {
             const className = type === 'success' ? 'success' : type === 'warning' ? 'warning' : 'info';
             statusMessage.innerHTML = `<div class="${className}">${message}</div>`;
-            setTimeout(() => {
-                statusMessage.innerHTML = '';
-            }, 5000);
+            if (autoClear) {
+                setTimeout(() => {
+                    statusMessage.innerHTML = '';
+                }, 5000);
+            }
         }
 
         // TikToken encoders cache
@@ -754,7 +760,10 @@
 
             // Show Anthropic API key suggestion if using estimates for Anthropic models
             if (model.apiModel && method === '(Estimated)') {
-                showStatus('💡 <strong>Tip:</strong> For exact token counts with Claude models, add your Anthropic API key via the ⚙️ settings button.', 'info');
+                showStatus('💡 <strong>Tip:</strong> For exact token counts with Claude models, add your Anthropic API key via the ⚙️ settings button.', 'info', false);
+            } else {
+                // Clear the tip if we're not using Anthropic estimates
+                statusMessage.innerHTML = '';
             }
         }
 
