@@ -1,0 +1,1128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AWS S3 Storage Cost Calculator - HTML Tools</title>
+    <link rel="stylesheet" href="theme.css">
+    <style>
+        :root {
+            /* Tool-specific colors */
+            --input-bg: #ffffff;
+            --result-bg: #f0f4ff;
+            --result-border: #d0d8ff;
+            --row-highlight: #e6ebff;
+            --warning-bg: #fff3cd;
+            --warning-border: #ffc107;
+            --warning-text: #856404;
+            /* Gradient background colors for light mode */
+            --bg-gradient-start: #667eea;
+            --bg-gradient-end: #764ba2;
+        }
+
+        body.dark-mode {
+            /* Tool-specific dark mode colors */
+            --input-bg: #2d2d2d;
+            --result-bg: #2a2a3e;
+            --result-border: #404060;
+            --row-highlight: #34345a;
+            --warning-bg: #3d3420;
+            --warning-border: #ffc107;
+            --warning-text: #ffdb6d;
+            /* Gradient background colors for dark mode */
+            --bg-gradient-start: #1a1a2e;
+            --bg-gradient-end: #16213e;
+        }
+
+        body {
+            background: linear-gradient(135deg, var(--bg-gradient-start) 0%, var(--bg-gradient-end) 100%);
+            min-height: 100vh;
+            padding: 40px 20px;
+            color: var(--text-primary);
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: var(--bg-secondary);
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px var(--shadow);
+            transition: background-color 0.3s ease;
+        }
+
+        h1 {
+            color: var(--text-primary);
+            margin-bottom: 10px;
+            font-size: 2.5em;
+        }
+
+        h2 {
+            color: var(--text-primary);
+            font-size: 1.3em;
+            margin: 30px 0 15px;
+        }
+
+        .subtitle {
+            color: var(--text-secondary);
+            margin-bottom: 30px;
+            font-size: 1.1em;
+        }
+
+        label {
+            display: block;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+
+        .hint {
+            display: block;
+            font-weight: normal;
+            font-size: 0.85em;
+            color: var(--text-secondary);
+            margin-top: 2px;
+        }
+
+        .inputs {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .field.full {
+            grid-column: 1 / -1;
+        }
+
+        .size-row {
+            display: flex;
+            gap: 10px;
+        }
+
+        .size-row input {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .size-row select {
+            width: auto;
+        }
+
+        input[type="number"], select {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid var(--border-color);
+            border-radius: 10px;
+            font-size: 16px;
+            background: var(--input-bg);
+            color: var(--text-primary);
+            transition: all 0.3s ease;
+        }
+
+        select {
+            cursor: pointer;
+        }
+
+        input[type="number"]:focus, select:focus {
+            outline: none;
+            border-color: var(--accent-primary);
+        }
+
+        .status-bar {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+            margin-top: 15px;
+            font-size: 0.85em;
+            color: var(--text-secondary);
+        }
+
+        .link-button {
+            background: none;
+            border: none;
+            color: var(--accent-primary);
+            cursor: pointer;
+            font-size: 1em;
+            padding: 0;
+            text-decoration: underline;
+        }
+
+        .link-button:hover {
+            color: var(--accent-secondary);
+        }
+
+        .results {
+            background: var(--result-bg);
+            border: 2px solid var(--result-border);
+            border-radius: 10px;
+            padding: 25px;
+            margin-top: 25px;
+        }
+
+        .headline-label {
+            color: var(--text-secondary);
+            font-weight: 600;
+            font-size: 0.95em;
+        }
+
+        .headline-value {
+            font-size: 1.6em;
+            font-weight: 700;
+            color: var(--accent-primary);
+            margin-top: 4px;
+        }
+
+        .headline-sub {
+            color: var(--text-secondary);
+            margin-top: 4px;
+        }
+
+        .ladder {
+            list-style: none;
+        }
+
+        .ladder li {
+            display: flex;
+            justify-content: space-between;
+            gap: 15px;
+            padding: 12px 0;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .ladder li:last-child {
+            border-bottom: none;
+        }
+
+        .ladder .range {
+            color: var(--text-secondary);
+            font-variant-numeric: tabular-nums;
+        }
+
+        .ladder .winner {
+            font-weight: 600;
+            text-align: right;
+        }
+
+        .ladder li.current .winner::after {
+            content: " ← you are here";
+            color: var(--accent-primary);
+            font-weight: normal;
+            font-size: 0.85em;
+        }
+
+        .table-wrap {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.95em;
+        }
+
+        th, td {
+            padding: 10px 8px;
+            text-align: right;
+            border-bottom: 1px solid var(--border-color);
+            vertical-align: top;
+        }
+
+        th:first-child, td:first-child {
+            text-align: left;
+        }
+
+        th {
+            color: var(--text-secondary);
+            font-weight: 600;
+            font-size: 0.85em;
+            white-space: nowrap;
+        }
+
+        td {
+            font-variant-numeric: tabular-nums;
+        }
+
+        tr.cheapest td {
+            background: var(--row-highlight);
+            font-weight: 700;
+        }
+
+        tr.unavailable td {
+            color: var(--text-secondary);
+            font-style: italic;
+        }
+
+        .info a {
+            color: var(--accent-primary);
+        }
+
+        th:first-child, td:first-child {
+            min-width: 170px;
+        }
+
+        .class-name {
+            font-weight: 600;
+        }
+
+        .class-note {
+            display: block;
+            font-weight: normal;
+            font-size: 0.8em;
+            color: var(--text-secondary);
+            margin-top: 2px;
+        }
+
+        .info {
+            background: var(--bg-primary);
+            border-left: 4px solid var(--accent-primary);
+            padding: 15px;
+            margin-top: 20px;
+            border-radius: 5px;
+            color: var(--text-secondary);
+            font-size: 0.9em;
+            line-height: 1.6;
+        }
+
+        .warning {
+            background: var(--warning-bg);
+            border-left: 4px solid var(--warning-border);
+            padding: 15px;
+            margin-top: 20px;
+            border-radius: 5px;
+            color: var(--warning-text);
+            font-size: 0.9em;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 20px;
+            }
+
+            h1 {
+                font-size: 1.8em;
+            }
+
+            .inputs {
+                grid-template-columns: 1fr;
+            }
+
+            .ladder li {
+                flex-direction: column;
+                gap: 4px;
+            }
+
+            .ladder .winner {
+                text-align: left;
+            }
+        }
+    </style>
+</head>
+<body>
+    <button class="theme-toggle" id="themeToggle" aria-label="Toggle dark mode">
+        <span class="theme-icon">🌙</span>
+    </button>
+
+    <div class="container">
+        <h1>🪣 AWS S3 Storage Cost Calculator</h1>
+        <p class="subtitle">Compare monthly cost across every S3 storage class using live AWS pricing, and find the retrieval frequency where each one wins.</p>
+
+        <div class="inputs">
+            <div class="field full">
+                <label for="regionSelect">Region</label>
+                <select id="regionSelect">
+                    <option value="us-east-1">Loading regions…</option>
+                </select>
+            </div>
+
+            <div class="field">
+                <label for="sizeInput">Data size</label>
+                <div class="size-row">
+                    <input type="number" id="sizeInput" min="0" step="any" value="36">
+                    <select id="unitSelect" aria-label="Size unit">
+                        <option value="KB">KB</option>
+                        <option value="MB">MB</option>
+                        <option value="GB" selected>GB</option>
+                        <option value="TB">TB</option>
+                        <option value="PB">PB</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="field">
+                <label for="retrievalsInput">
+                    Full retrievals per month
+                    <span class="hint">Decimals are fine: 0.25 = once a quarter</span>
+                </label>
+                <input type="number" id="retrievalsInput" min="0" step="any" value="1">
+            </div>
+
+            <div class="field">
+                <label for="latencySelect">
+                    Retrieval speed needed
+                    <span class="hint">Slower classes are left out of the comparison</span>
+                </label>
+                <select id="latencySelect">
+                    <option value="0">Milliseconds (instant)</option>
+                    <option value="1">Minutes (Expedited restore)</option>
+                    <option value="2">Hours (up to 12)</option>
+                    <option value="3" selected>Up to 48 hours (any)</option>
+                </select>
+            </div>
+
+            <div class="field">
+                <label for="objectsInput">
+                    Number of objects
+                    <span class="hint">The data is split evenly across this many objects</span>
+                </label>
+                <input type="number" id="objectsInput" min="1" step="1" value="1">
+            </div>
+        </div>
+
+        <div class="status-bar">
+            <span id="pricingStatus">Loading pricing…</span>
+            <button class="link-button" id="refreshButton">Refresh pricing</button>
+        </div>
+
+        <div id="warningMessage"></div>
+
+        <div class="results">
+            <div class="headline-label" id="headlineLabel">Cheapest option</div>
+            <div class="headline-value" id="headlineValue">-</div>
+            <div class="headline-sub" id="headlineSub"></div>
+        </div>
+
+        <h2>Break-even: cheapest class by retrieval frequency</h2>
+        <p class="hint" style="margin-bottom: 10px;">For this data size and object count, the storage class that costs the least in each range of monthly retrievals.</p>
+        <ul class="ladder" id="ladder"></ul>
+
+        <h2>All storage classes</h2>
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Storage class</th>
+                        <th>Storage / mo</th>
+                        <th>Per retrieval</th>
+                        <th id="totalHeader">Monthly total</th>
+                        <th>Cheaper than Standard</th>
+                    </tr>
+                </thead>
+                <tbody id="resultsBody"></tbody>
+            </table>
+        </div>
+
+        <div class="info">
+            <strong>ℹ️ How this is calculated</strong><br>
+            • Prices come from the public <a href="https://docs.aws.amazon.com/awsaccountbilling/latest/aboutv2/using-the-aws-price-list-bulk-api.html" target="_blank" rel="noopener">AWS Price List Bulk API</a>. Your browser fetches them directly from AWS. The region list is cached for 90 days and each region's prices for 30 days.<br>
+            • A "retrieval" reads the whole data set once: one GET per object, plus any per-GB retrieval fee. Glacier Flexible Retrieval and Deep Archive also pay a restore request and fee, and the restored copy is billed at Standard rates for 1 day.<br>
+            • Minimum billable sizes are included: 128 KB per object for IA and Glacier Instant Retrieval, and 40 KB of overhead per object for Glacier Flexible Retrieval and Deep Archive.<br>
+            • Intelligent-Tiering is shown at its steady state. Objects accessed at least monthly stay in Frequent Access, objects untouched for 30 days move to Infrequent Access, and after 90 days to Archive Instant Access. The optional archive tiers are not modeled.<br>
+            • Not included: data transfer out to the internet (the same for every class, so it doesn't move the break-even points), upload/PUT and lifecycle transition fees, the free tier, and early-deletion charges (minimum storage duration: 30 days for IA, 90 for Glacier IR and Flexible Retrieval, 180 for Deep Archive).
+        </div>
+    </div>
+
+    <script>
+        // ========================================
+        // CONSTANTS
+        // ========================================
+
+        const PRICING_HOST = 'https://pricing.us-east-1.amazonaws.com';
+        const S3_REGION_INDEX = `${PRICING_HOST}/offers/v1.0/aws/AmazonS3/current/region_index.json`;
+        // Glacier Deep Archive is published as its own offer, separate from AmazonS3
+        const GDA_REGION_URL = (region) => `${PRICING_HOST}/offers/v1.0/aws/AmazonS3GlacierDeepArchive/current/${region}/index.json`;
+
+        const REGION_TTL_DAYS = 90;
+        const PRICE_TTL_DAYS = 30;
+        const DAY_MS = 24 * 60 * 60 * 1000;
+
+        // AWS bills storage in binary units (a "GB" is 2^30 bytes)
+        const UNIT_TO_GB = { KB: 1 / 1024 ** 2, MB: 1 / 1024, GB: 1, TB: 1024, PB: 1024 ** 2 };
+        const KB_IN_GB = UNIT_TO_GB.KB;
+        const RESTORE_DAYS = 1; // days a restored Glacier copy is kept (billed at Standard rates)
+
+        // Friendly names for the region dropdown. Regions missing here fall back to
+        // the name AWS publishes in the price file, once it has been fetched.
+        const REGION_NAMES = {
+            'us-east-1': 'US East (N. Virginia)', 'us-east-2': 'US East (Ohio)',
+            'us-west-1': 'US West (N. California)', 'us-west-2': 'US West (Oregon)',
+            'us-gov-east-1': 'AWS GovCloud (US-East)', 'us-gov-west-1': 'AWS GovCloud (US-West)',
+            'ca-central-1': 'Canada (Central)', 'ca-west-1': 'Canada West (Calgary)',
+            'mx-central-1': 'Mexico (Central)', 'sa-east-1': 'South America (São Paulo)',
+            'eu-west-1': 'Europe (Ireland)', 'eu-west-2': 'Europe (London)', 'eu-west-3': 'Europe (Paris)',
+            'eu-central-1': 'Europe (Frankfurt)', 'eu-central-2': 'Europe (Zurich)',
+            'eu-north-1': 'Europe (Stockholm)', 'eu-south-1': 'Europe (Milan)', 'eu-south-2': 'Europe (Spain)',
+            'il-central-1': 'Israel (Tel Aviv)', 'me-central-1': 'Middle East (UAE)', 'me-south-1': 'Middle East (Bahrain)',
+            'af-south-1': 'Africa (Cape Town)',
+            'ap-east-1': 'Asia Pacific (Hong Kong)', 'ap-east-2': 'Asia Pacific (Taipei)',
+            'ap-south-1': 'Asia Pacific (Mumbai)', 'ap-south-2': 'Asia Pacific (Hyderabad)',
+            'ap-northeast-1': 'Asia Pacific (Tokyo)', 'ap-northeast-2': 'Asia Pacific (Seoul)', 'ap-northeast-3': 'Asia Pacific (Osaka)',
+            'ap-southeast-1': 'Asia Pacific (Singapore)', 'ap-southeast-2': 'Asia Pacific (Sydney)',
+            'ap-southeast-3': 'Asia Pacific (Jakarta)', 'ap-southeast-4': 'Asia Pacific (Melbourne)',
+            'ap-southeast-5': 'Asia Pacific (Malaysia)', 'ap-southeast-6': 'Asia Pacific (New Zealand)',
+            'ap-southeast-7': 'Asia Pacific (Thailand)'
+        };
+
+        // Price List usage types this calculator needs. AWS prefixes usage types with a
+        // region code (e.g. "EU-TimedStorage-ByteHrs"), which the parser strips. Keys
+        // with "|operation" only match that operation; plain keys only match products
+        // with no operation.
+        const NEEDED_RATES = new Set([
+            // Standard
+            'TimedStorage-ByteHrs', 'Requests-Tier2',
+            // Intelligent-Tiering
+            'TimedStorage-INT-FA-ByteHrs', 'TimedStorage-INT-IA-ByteHrs', 'TimedStorage-INT-AIA-ByteHrs',
+            'Monitoring-Automation-INT', 'Requests-INT-Tier2',
+            // Standard-IA, One Zone-IA, Glacier Instant Retrieval
+            'TimedStorage-SIA-ByteHrs', 'Requests-SIA-Tier2', 'Retrieval-SIA',
+            'TimedStorage-ZIA-ByteHrs', 'Requests-ZIA-Tier2', 'Retrieval-ZIA',
+            'TimedStorage-GIR-ByteHrs', 'Requests-GIR-Tier2', 'Retrieval-GIR',
+            // Glacier Flexible Retrieval (restore tiers: expedited / standard / bulk)
+            'TimedStorage-GlacierByteHrs', 'Requests-GLACIER-Tier2',
+            'Requests-Tier6', 'Expedited-Retrieval-Bytes',
+            'Requests-Tier3|RestoreObject', 'Standard-Retrieval-Bytes|RestoreObject',
+            'Requests-Tier5', 'Bulk-Retrieval-Bytes|RestoreObject',
+            // Glacier Deep Archive (restore tiers: standard / bulk)
+            'TimedStorage-GDA-ByteHrs', 'Requests-GDA-Tier2',
+            'Requests-GDA-Tier3', 'Standard-Retrieval-Bytes|DeepArchiveRestoreObject',
+            'Requests-GDA-Tier5', 'Bulk-Retrieval-Bytes|DeepArchiveRestoreObject',
+            // Express One Zone
+            'TimedStorage-XZ-ByteHrs', 'Requests-XZ-Tier2', 'Retrieval-XZ'
+        ]);
+
+        // us-east-1 snapshot (Price List publication 2026-09-28), used only when AWS
+        // can't be reached and nothing is cached.
+        const FALLBACK_PRICING = {
+            region: 'us-east-1', location: 'US East (N. Virginia)', publicationDate: "2026-09-28T23:04:16Z", fetchedAt: 0,
+            rates: {
+                "Bulk-Retrieval-Bytes|DeepArchiveRestoreObject": [[0, null, 0.0025]],
+                "Bulk-Retrieval-Bytes|RestoreObject": [[0, null, 0]],
+                "Expedited-Retrieval-Bytes": [[0, null, 0.03]],
+                "Monitoring-Automation-INT": [[0, null, 2.5e-06]],
+                "Requests-GDA-Tier2": [[0, null, 4e-07]],
+                "Requests-GDA-Tier3": [[0, null, 0.0001]],
+                "Requests-GDA-Tier5": [[0, null, 2.5e-05]],
+                "Requests-GIR-Tier2": [[0, null, 1e-05]],
+                "Requests-GLACIER-Tier2": [[0, null, 4e-07]],
+                "Requests-INT-Tier2": [[0, null, 4e-07]],
+                "Requests-SIA-Tier2": [[0, null, 1e-06]],
+                "Requests-Tier2": [[0, null, 4e-07]],
+                "Requests-Tier3|RestoreObject": [[0, null, 5e-05]],
+                "Requests-Tier5": [[0, null, 0]],
+                "Requests-Tier6": [[0, null, 0.01]],
+                "Requests-XZ-Tier2": [[0, null, 3e-08]],
+                "Requests-ZIA-Tier2": [[0, null, 1e-06]],
+                "Retrieval-GIR": [[0, null, 0.03]],
+                "Retrieval-SIA": [[0, null, 0.01]],
+                "Retrieval-XZ": [[0, null, 0.0006]],
+                "Retrieval-ZIA": [[0, null, 0.01]],
+                "Standard-Retrieval-Bytes|DeepArchiveRestoreObject": [[0, null, 0.02]],
+                "Standard-Retrieval-Bytes|RestoreObject": [[0, null, 0.01]],
+                "TimedStorage-ByteHrs": [[0, 51200, 0.023], [51200, 512000, 0.022], [512000, null, 0.021]],
+                "TimedStorage-GDA-ByteHrs": [[0, null, 0.00099]],
+                "TimedStorage-GIR-ByteHrs": [[0, null, 0.004]],
+                "TimedStorage-GlacierByteHrs": [[0, null, 0.0036]],
+                "TimedStorage-INT-AIA-ByteHrs": [[0, null, 0.004]],
+                "TimedStorage-INT-FA-ByteHrs": [[0, 51200, 0.023], [51200, 512000, 0.022], [512000, null, 0.021]],
+                "TimedStorage-INT-IA-ByteHrs": [[0, null, 0.0125]],
+                "TimedStorage-SIA-ByteHrs": [[0, null, 0.0125]],
+                "TimedStorage-XZ-ByteHrs": [[0, null, 0.11]],
+                "TimedStorage-ZIA-ByteHrs": [[0, null, 0.01]]
+            }
+        };
+
+        // ========================================
+        // PRICING CACHE (localStorage with TTL)
+        // ========================================
+
+        const PricingCache = {
+            prefix: 's3-cost-calculator:',
+
+            // Returns { entry, fresh } or null. Stale entries are still returned so they
+            // can be used as a fallback when AWS is unreachable.
+            read(key, ttlDays) {
+                try {
+                    const raw = localStorage.getItem(this.prefix + key);
+                    if (!raw) return null;
+                    const entry = JSON.parse(raw);
+                    return { entry, fresh: Date.now() - entry.fetchedAt < ttlDays * DAY_MS };
+                } catch (error) {
+                    return null;
+                }
+            },
+
+            write(key, data) {
+                const entry = { ...data, fetchedAt: Date.now() };
+                try {
+                    localStorage.setItem(this.prefix + key, JSON.stringify(entry));
+                } catch (error) {
+                    console.warn('Could not cache pricing data:', error);
+                }
+                return entry;
+            },
+
+            clear() {
+                try {
+                    Object.keys(localStorage)
+                        .filter((key) => key.startsWith(this.prefix))
+                        .forEach((key) => localStorage.removeItem(key));
+                } catch (error) {
+                    // Storage unavailable; nothing to clear
+                }
+            }
+        };
+
+        // ========================================
+        // FETCHING & PARSING AWS PRICE LISTS
+        // ========================================
+
+        async function fetchJson(url) {
+            const response = await fetch(url);
+            if (!response.ok) {
+                const error = new Error(`HTTP ${response.status} for ${url}`);
+                error.status = response.status;
+                throw error;
+            }
+            return response.json();
+        }
+
+        // Region list: every region with an S3 price file
+        async function loadRegions(forceRefresh = false) {
+            const cached = PricingCache.read('regions', REGION_TTL_DAYS);
+            if (cached && cached.fresh && !forceRefresh) return cached.entry;
+
+            try {
+                const index = await fetchJson(S3_REGION_INDEX);
+                const regions = Object.values(index.regions)
+                    .filter((r) => r.regionCode !== 'aws-other')
+                    .map((r) => ({ code: r.regionCode, url: PRICING_HOST + r.currentVersionUrl }));
+                return PricingCache.write('regions', { publicationDate: index.publicationDate, regions });
+            } catch (error) {
+                console.error('Failed to load region list:', error);
+                if (cached) return cached.entry;
+                // Last resort: the regions we know about
+                return {
+                    regions: Object.keys(REGION_NAMES).map((code) => ({
+                        code,
+                        url: `${PRICING_HOST}/offers/v1.0/aws/AmazonS3/current/${code}/index.json`
+                    }))
+                };
+            }
+        }
+
+        // Reduce a Price List offer file to { rateKey: [[beginRange, endRange, usdPerUnit], ...] }
+        function extractRates(offer, regionCode, rates) {
+            const onDemand = (offer.terms && offer.terms.OnDemand) || {};
+            let location = null;
+
+            for (const [sku, product] of Object.entries(offer.products || {})) {
+                const attrs = product.attributes || {};
+                if (attrs.regionCode !== regionCode || !attrs.usagetype) continue;
+                if (attrs.location) location = location || attrs.location;
+
+                const usage = attrs.usagetype.replace(/^[A-Z0-9]+-/, '');
+                const key = attrs.operation ? `${usage}|${attrs.operation}` : usage;
+                if (!NEEDED_RATES.has(key) || rates[key]) continue;
+
+                const tiers = [];
+                for (const term of Object.values(onDemand[sku] || {})) {
+                    for (const dim of Object.values(term.priceDimensions || {})) {
+                        const end = dim.endRange === 'Inf' ? Infinity : parseFloat(dim.endRange);
+                        tiers.push([parseFloat(dim.beginRange), end, parseFloat(dim.pricePerUnit.USD)]);
+                    }
+                }
+                if (tiers.length) {
+                    rates[key] = tiers.sort((a, b) => a[0] - b[0]);
+                }
+            }
+            return location;
+        }
+
+        async function fetchRegionPricing(region) {
+            const s3Offer = await fetchJson(region.url);
+            const rates = {};
+            const location = extractRates(s3Offer, region.code, rates);
+
+            // Deep Archive lives in its own offer; not every region has it
+            try {
+                const gdaOffer = await fetchJson(GDA_REGION_URL(region.code));
+                extractRates(gdaOffer, region.code, rates);
+            } catch (error) {
+                if (error.status !== 404 && error.status !== 403) throw error;
+            }
+
+            // JSON can't store Infinity, so encode open-ended tiers as null
+            const serializable = {};
+            for (const [key, tiers] of Object.entries(rates)) {
+                serializable[key] = tiers.map(([b, e, p]) => [b, Number.isFinite(e) ? e : null, p]);
+            }
+            return { region: region.code, location, publicationDate: s3Offer.publicationDate, rates: serializable };
+        }
+
+        async function loadPricing(region, forceRefresh = false) {
+            const key = `prices:${region.code}`;
+            const cached = PricingCache.read(key, PRICE_TTL_DAYS);
+            if (cached && cached.fresh && !forceRefresh) return { pricing: cached.entry, source: 'cache' };
+
+            try {
+                const pricing = PricingCache.write(key, await fetchRegionPricing(region));
+                return { pricing, source: 'live' };
+            } catch (error) {
+                console.error(`Failed to load pricing for ${region.code}:`, error);
+                if (cached) return { pricing: cached.entry, source: 'stale' };
+                if (FALLBACK_PRICING && region.code === 'us-east-1') {
+                    return { pricing: FALLBACK_PRICING, source: 'fallback' };
+                }
+                throw error;
+            }
+        }
+
+        // ========================================
+        // COST MODEL
+        // ========================================
+
+        // Cost for `quantity` units across tiered pricing
+        function tieredCost(tiers, quantity) {
+            let cost = 0;
+            for (const [begin, end, price] of tiers) {
+                const upper = end === null ? Infinity : end;
+                if (quantity > begin) cost += (Math.min(quantity, upper) - begin) * price;
+            }
+            return cost;
+        }
+
+        // Flat price (first tier) for a rate key
+        function flat(rates, key) {
+            return rates[key][0][2];
+        }
+
+        // Storage classes. Each has `requires` (rate keys that must exist in the region)
+        // and `cost(rates, data, retrievals)` -> { storage, perRetrieval, total }.
+        // `data` = { gb, objects, objectGB }.
+        const STORAGE_CLASSES = [
+            {
+                id: 'standard',
+                name: 'S3 Standard',
+                latency: 0,
+                note: 'Hot storage, frequent access',
+                requires: ['TimedStorage-ByteHrs', 'Requests-Tier2'],
+                cost(rates, data, n) {
+                    const storage = tieredCost(rates['TimedStorage-ByteHrs'], data.gb);
+                    const perRetrieval = data.objects * flat(rates, 'Requests-Tier2');
+                    return { storage, perRetrieval, total: storage + n * perRetrieval };
+                }
+            },
+            {
+                id: 'intelligent-tiering',
+                name: 'S3 Intelligent-Tiering',
+                latency: 0,
+                note: 'Moves objects between tiers automatically',
+                requires: ['TimedStorage-INT-FA-ByteHrs', 'TimedStorage-INT-IA-ByteHrs', 'TimedStorage-INT-AIA-ByteHrs',
+                    'Monitoring-Automation-INT', 'Requests-INT-Tier2'],
+                cost(rates, data, n) {
+                    const frequent = tieredCost(rates['TimedStorage-INT-FA-ByteHrs'], data.gb);
+                    let storage;
+                    if (data.objectGB < 128 * KB_IN_GB) {
+                        // Objects under 128 KB are never monitored or tiered
+                        storage = frequent;
+                    } else {
+                        // Steady state: after each access an object spends 1 month in Frequent
+                        // Access, months 1-3 in Infrequent Access, then Archive Instant Access.
+                        const interval = n > 0 ? 1 / n : Infinity; // months between accesses
+                        const fracFrequent = Math.min(interval, 1) / interval;
+                        const fracInfrequent = Number.isFinite(interval) ? Math.max(Math.min(interval, 3) - 1, 0) / interval : 0;
+                        const fracArchive = 1 - fracFrequent - fracInfrequent;
+                        storage = fracFrequent * frequent
+                            + fracInfrequent * data.gb * flat(rates, 'TimedStorage-INT-IA-ByteHrs')
+                            + fracArchive * data.gb * flat(rates, 'TimedStorage-INT-AIA-ByteHrs')
+                            + data.objects * flat(rates, 'Monitoring-Automation-INT');
+                    }
+                    const perRetrieval = data.objects * flat(rates, 'Requests-INT-Tier2');
+                    return { storage, perRetrieval, total: storage + n * perRetrieval };
+                }
+            },
+            // Latency: 0 = milliseconds, 1 = minutes, 2 = hours (up to 12), 3 = up to 48 hours
+            infrequentClass('standard-ia', 'S3 Standard-IA', 'Warm storage, 30-day minimum', 'SIA'),
+            infrequentClass('one-zone-ia', 'S3 One Zone-IA', 'Warm, single AZ, 30-day minimum', 'ZIA'),
+            infrequentClass('glacier-ir', 'S3 Glacier Instant Retrieval', 'Millisecond access, 90-day minimum', 'GIR'),
+            glacierClass('glacier-fr-expedited', 'Glacier Flexible Retrieval (Expedited)', '1–5 minute restore, 90-day minimum', 1,
+                'TimedStorage-GlacierByteHrs', 'Requests-GLACIER-Tier2', 'Requests-Tier6', 'Expedited-Retrieval-Bytes'),
+            glacierClass('glacier-fr-standard', 'Glacier Flexible Retrieval (Standard)', '3–5 hour restore, 90-day minimum', 2,
+                'TimedStorage-GlacierByteHrs', 'Requests-GLACIER-Tier2', 'Requests-Tier3|RestoreObject', 'Standard-Retrieval-Bytes|RestoreObject'),
+            glacierClass('glacier-fr-bulk', 'Glacier Flexible Retrieval (Bulk)', '5–12 hour restore, 90-day minimum', 2,
+                'TimedStorage-GlacierByteHrs', 'Requests-GLACIER-Tier2', 'Requests-Tier5', 'Bulk-Retrieval-Bytes|RestoreObject'),
+            glacierClass('deep-archive-standard', 'Glacier Deep Archive (Standard)', '12 hour restore, 180-day minimum', 2,
+                'TimedStorage-GDA-ByteHrs', 'Requests-GDA-Tier2', 'Requests-GDA-Tier3', 'Standard-Retrieval-Bytes|DeepArchiveRestoreObject'),
+            glacierClass('deep-archive-bulk', 'Glacier Deep Archive (Bulk)', 'Up to 48 hour restore, 180-day minimum', 3,
+                'TimedStorage-GDA-ByteHrs', 'Requests-GDA-Tier2', 'Requests-GDA-Tier5', 'Bulk-Retrieval-Bytes|DeepArchiveRestoreObject'),
+            {
+                id: 'express-one-zone',
+                name: 'S3 Express One Zone',
+                latency: 0,
+                note: 'Lowest latency, single AZ, directory buckets',
+                requires: ['TimedStorage-XZ-ByteHrs', 'Requests-XZ-Tier2', 'Retrieval-XZ'],
+                cost(rates, data, n) {
+                    const storage = data.gb * flat(rates, 'TimedStorage-XZ-ByteHrs');
+                    // The per-GB retrieval fee only applies to the part of each request above 512 KB
+                    const billableGB = data.objects * Math.max(data.objectGB - 512 * KB_IN_GB, 0);
+                    const perRetrieval = data.objects * flat(rates, 'Requests-XZ-Tier2')
+                        + billableGB * flat(rates, 'Retrieval-XZ');
+                    return { storage, perRetrieval, total: storage + n * perRetrieval };
+                }
+            }
+        ];
+
+        // Standard-IA, One Zone-IA and Glacier Instant Retrieval share a shape:
+        // 128 KB minimum billable object size, GET fee, and a per-GB retrieval fee.
+        function infrequentClass(id, name, note, code) {
+            const storageKey = `TimedStorage-${code}-ByteHrs`;
+            const getKey = `Requests-${code}-Tier2`;
+            const retrievalKey = `Retrieval-${code}`;
+            return {
+                id, name, note,
+                latency: 0,
+                requires: [storageKey, getKey, retrievalKey],
+                cost(rates, data, n) {
+                    const billableGB = data.objects * Math.max(data.objectGB, 128 * KB_IN_GB);
+                    const storage = billableGB * flat(rates, storageKey);
+                    const perRetrieval = data.objects * flat(rates, getKey) + data.gb * flat(rates, retrievalKey);
+                    return { storage, perRetrieval, total: storage + n * perRetrieval };
+                }
+            };
+        }
+
+        // Glacier Flexible Retrieval and Deep Archive: objects must be restored before
+        // they can be read. Each object also carries 40 KB of overhead: 32 KB billed
+        // at the archive rate and 8 KB billed at the Standard rate.
+        function glacierClass(id, name, note, latency, storageKey, getKey, restoreRequestKey, restoreBytesKey) {
+            return {
+                id, name, note, latency,
+                requires: [storageKey, getKey, restoreRequestKey, restoreBytesKey, 'TimedStorage-ByteHrs'],
+                cost(rates, data, n) {
+                    const standardRate = flat(rates, 'TimedStorage-ByteHrs');
+                    const storage = (data.gb + data.objects * 32 * KB_IN_GB) * flat(rates, storageKey)
+                        + data.objects * 8 * KB_IN_GB * standardRate;
+                    const perRetrieval = data.objects * (flat(rates, restoreRequestKey) + flat(rates, getKey))
+                        + data.gb * flat(rates, restoreBytesKey)
+                        + data.gb * standardRate * (RESTORE_DAYS / 30); // temporary restored copy
+                    return { storage, perRetrieval, total: storage + n * perRetrieval };
+                }
+            };
+        }
+
+        function availableClasses(rates) {
+            return STORAGE_CLASSES.filter((c) => c.requires.every((key) => rates[key]));
+        }
+
+        // Cheapest class at a retrieval count. On a tie, the class with the cheaper
+        // retrievals wins (it stays ahead as n grows), then the earlier class.
+        function cheapestAt(classes, rates, data, n) {
+            let best = null;
+            let bestCost = null;
+            for (const c of classes) {
+                const cost = c.cost(rates, data, n);
+                const tied = bestCost && Math.abs(cost.total - bestCost.total) <= bestCost.total * 1e-9;
+                if (!bestCost || (!tied && cost.total < bestCost.total) || (tied && cost.perRetrieval < bestCost.perRetrieval)) {
+                    best = c;
+                    bestCost = cost;
+                }
+            }
+            return best;
+        }
+
+        // Find the n in (lo, hi] where fn(n) first becomes true (fn(lo) is false)
+        function bisect(fn, lo, hi) {
+            for (let i = 0; i < 60; i++) {
+                const mid = (lo + hi) / 2;
+                if (fn(mid)) hi = mid; else lo = mid;
+            }
+            return hi;
+        }
+
+        // Ranges of monthly retrievals where each class is the cheapest.
+        // Costs aren't always linear in n (Intelligent-Tiering), so sweep a log grid
+        // and refine each switch point by bisection.
+        const SWEEP_MAX = 1e7;
+        function cheapestRanges(classes, rates, data) {
+            const grid = [0];
+            for (let exp = -4; exp <= Math.log10(SWEEP_MAX); exp += 0.02) grid.push(10 ** exp);
+
+            const ranges = [];
+            let current = cheapestAt(classes, rates, data, 0);
+            let from = 0;
+            for (let i = 1; i < grid.length; i++) {
+                const winner = cheapestAt(classes, rates, data, grid[i]);
+                if (winner === current) continue;
+                const previous = current;
+                const switchAt = bisect((n) => cheapestAt(classes, rates, data, n) !== previous, grid[i - 1], grid[i]);
+                ranges.push({ cls: current, from, to: switchAt });
+                current = cheapestAt(classes, rates, data, switchAt);
+                from = switchAt;
+            }
+            ranges.push({ cls: current, from, to: Infinity });
+            return ranges;
+        }
+
+        // Retrievals per month below which `cls` is cheaper than Standard
+        function breakEvenVsStandard(cls, standard, rates, data) {
+            const cheaper = (n) => cls.cost(rates, data, n).total < standard.cost(rates, data, n).total * (1 - 1e-9);
+            if (!cheaper(0)) {
+                return cheaper(SWEEP_MAX) ? { kind: 'above', n: bisect(cheaper, 0, SWEEP_MAX) } : { kind: 'never' };
+            }
+            if (cheaper(SWEEP_MAX)) return { kind: 'always' };
+            return { kind: 'below', n: bisect((n) => !cheaper(n), 0, SWEEP_MAX) };
+        }
+
+        // ========================================
+        // FORMATTING
+        // ========================================
+
+        function formatCost(cost) {
+            if (cost === 0) return '$0.00';
+            // Two significant digits, without scientific notation
+            if (cost < 0.0001) return `$${cost.toFixed(Math.min(12, 1 - Math.floor(Math.log10(cost))))}`;
+            if (cost < 0.01) return `$${cost.toFixed(5)}`;
+            if (cost < 1) return `$${cost.toFixed(4)}`;
+            return `$${cost.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+        }
+
+        function formatRetrievals(n) {
+            if (n === 0) return '0';
+            if (!Number.isFinite(n)) return '∞';
+            if (n < 0.001) return '≈0';
+            if (n >= 100) return Math.round(n).toLocaleString();
+            if (n >= 1) return n.toFixed(n >= 10 ? 1 : 2).replace(/\.?0+$/, '');
+            return n.toPrecision(2).replace(/\.?0+$/, '');
+        }
+
+        // "once every 4 months" for retrieval rates below one per month
+        function formatCadence(n) {
+            if (n <= 0 || n >= 1) return '';
+            const months = 1 / n;
+            if (months < 1.05) return '';
+            if (months >= 24) return `once every ${(months / 12).toFixed(1).replace(/\.0$/, '')} years`;
+            return `once every ${months.toFixed(1).replace(/\.0$/, '')} months`;
+        }
+
+        function formatBreakEven(result) {
+            switch (result.kind) {
+                case 'below': return `below ${formatRetrievals(result.n)} / mo`
+                    + (result.n < 1 ? `<span class="class-note">${formatCadence(result.n)}</span>` : '');
+                case 'above': return `above ${formatRetrievals(result.n)} / mo`;
+                case 'always': return 'always';
+                default: return 'never';
+            }
+        }
+
+        function daysAgo(timestamp) {
+            const days = Math.floor((Date.now() - timestamp) / DAY_MS);
+            return days === 0 ? 'today' : days === 1 ? '1 day ago' : `${days} days ago`;
+        }
+
+        // ========================================
+        // UI
+        // ========================================
+
+        const regionSelect = document.getElementById('regionSelect');
+        const sizeInput = document.getElementById('sizeInput');
+        const unitSelect = document.getElementById('unitSelect');
+        const retrievalsInput = document.getElementById('retrievalsInput');
+        const objectsInput = document.getElementById('objectsInput');
+        const latencySelect = document.getElementById('latencySelect');
+        const pricingStatus = document.getElementById('pricingStatus');
+        const refreshButton = document.getElementById('refreshButton');
+        const warningMessage = document.getElementById('warningMessage');
+        const headlineLabel = document.getElementById('headlineLabel');
+        const headlineValue = document.getElementById('headlineValue');
+        const headlineSub = document.getElementById('headlineSub');
+        const ladder = document.getElementById('ladder');
+        const resultsBody = document.getElementById('resultsBody');
+        const totalHeader = document.getElementById('totalHeader');
+
+        let regionList = [];
+        let currentPricing = null;
+        let loadToken = 0; // ignores responses from superseded region loads
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function regionName(code) {
+            const learned = PricingCache.read(`prices:${code}`, Infinity);
+            return REGION_NAMES[code] || (learned && learned.entry.location) || code;
+        }
+
+        function populateRegions(selected) {
+            const sorted = [...regionList].sort((a, b) => regionName(a.code).localeCompare(regionName(b.code)));
+            regionSelect.innerHTML = sorted
+                .map((r) => `<option value="${r.code}">${escapeHtml(regionName(r.code))} (${r.code})</option>`)
+                .join('');
+            regionSelect.value = regionList.some((r) => r.code === selected) ? selected : 'us-east-1';
+        }
+
+        function showWarning(message) {
+            warningMessage.innerHTML = message ? `<div class="warning">${message}</div>` : '';
+        }
+
+        function readInputs() {
+            const size = Math.max(parseFloat(sizeInput.value) || 0, 0);
+            const gb = size * UNIT_TO_GB[unitSelect.value];
+            const objects = Math.max(Math.round(parseFloat(objectsInput.value) || 1), 1);
+            const retrievals = Math.max(parseFloat(retrievalsInput.value) || 0, 0);
+            const maxLatency = parseInt(latencySelect.value, 10);
+            return { data: { gb, objects, objectGB: gb / objects }, retrievals, maxLatency };
+        }
+
+        // Keep inputs in the URL so a configuration can be shared or bookmarked
+        function syncUrl() {
+            const params = new URLSearchParams({
+                region: regionSelect.value,
+                size: sizeInput.value,
+                unit: unitSelect.value,
+                retrievals: retrievalsInput.value,
+                objects: objectsInput.value,
+                speed: latencySelect.value
+            });
+            history.replaceState(null, '', `${location.pathname}?${params}`);
+        }
+
+        function restoreFromUrl() {
+            const params = new URLSearchParams(location.search);
+            if (params.has('size')) sizeInput.value = params.get('size');
+            if (params.has('unit') && UNIT_TO_GB[params.get('unit')]) unitSelect.value = params.get('unit');
+            if (params.has('retrievals')) retrievalsInput.value = params.get('retrievals');
+            if (params.has('objects')) objectsInput.value = params.get('objects');
+            if (['0', '1', '2', '3'].includes(params.get('speed'))) latencySelect.value = params.get('speed');
+            return params.get('region') || 'us-east-1';
+        }
+
+        function render() {
+            syncUrl();
+            if (!currentPricing) return;
+
+            const rates = currentPricing.rates;
+            const { data, retrievals, maxLatency } = readInputs();
+            const available = availableClasses(rates);
+            const classes = available.filter((c) => c.latency <= maxLatency);
+            const standard = available.find((c) => c.id === 'standard');
+
+            if (data.gb <= 0 || !classes.length) {
+                headlineValue.textContent = '-';
+                headlineSub.textContent = data.gb <= 0 ? 'Enter a data size above.'
+                    : available.length ? 'No storage class in this region meets that retrieval speed.'
+                    : 'No S3 storage classes are priced for this region.';
+                ladder.innerHTML = '';
+                resultsBody.innerHTML = '';
+                return;
+            }
+
+            // Headline
+            const best = cheapestAt(classes, rates, data, retrievals);
+            const bestCost = best.cost(rates, data, retrievals);
+            const cadence = formatCadence(retrievals);
+            headlineLabel.textContent = `Cheapest at ${formatRetrievals(retrievals)} retrieval${retrievals === 1 ? '' : 's'} per month${cadence ? ` (${cadence})` : ''}`;
+            headlineValue.textContent = `${best.name}: ${formatCost(bestCost.total)} / month`;
+            headlineSub.textContent = standard && best !== standard
+                ? `S3 Standard would cost ${formatCost(standard.cost(rates, data, retrievals).total)} / month.`
+                : '';
+
+            // Break-even ladder
+            ladder.innerHTML = cheapestRanges(classes, rates, data).map((range) => {
+                const isCurrent = retrievals >= range.from && retrievals < range.to;
+                const rangeText = !Number.isFinite(range.to)
+                    ? `${formatRetrievals(range.from)}+ retrievals / mo`
+                    : `${formatRetrievals(range.from)} – ${formatRetrievals(range.to)} retrievals / mo`
+                        + (range.to < 1 ? ` <span class="hint" style="display:inline">(less often than ${formatCadence(range.to).replace("once ", "")})</span>` : '');
+                return `<li class="${isCurrent ? 'current' : ''}">
+                    <span class="range">${rangeText}</span>
+                    <span class="winner">${escapeHtml(range.cls.name)}</span>
+                </li>`;
+            }).join('');
+
+            // Comparison table
+            totalHeader.textContent = `Total at ${retrievals.toLocaleString()} / mo`;
+            const rows = STORAGE_CLASSES.map((c) => {
+                if (!available.includes(c)) {
+                    return `<tr class="unavailable"><td><span class="class-name">${escapeHtml(c.name)}</span></td>
+                        <td colspan="4">Not available in this region</td></tr>`;
+                }
+                const cost = c.cost(rates, data, retrievals);
+                const tooSlow = c.latency > maxLatency;
+                const breakEven = !standard ? '-' : c === standard ? '-' : formatBreakEven(breakEvenVsStandard(c, standard, rates, data));
+                return `<tr class="${c === best ? 'cheapest' : tooSlow ? 'unavailable' : ''}">
+                    <td><span class="class-name">${escapeHtml(c.name)}</span><span class="class-note">${escapeHtml(c.note)}${tooSlow ? ' · too slow for your retrieval speed' : ''}</span></td>
+                    <td>${formatCost(cost.storage)}</td>
+                    <td>${formatCost(cost.perRetrieval)}</td>
+                    <td>${formatCost(cost.total)}</td>
+                    <td>${breakEven}</td>
+                </tr>`;
+            });
+            resultsBody.innerHTML = rows.join('');
+        }
+
+        function describeSource(pricing, source) {
+            const published = pricing.publicationDate ? pricing.publicationDate.slice(0, 10) : 'unknown date';
+            const where = pricing.location ? `${pricing.location}` : pricing.region;
+            switch (source) {
+                case 'live': return `${where} prices published by AWS ${published} · fetched just now`;
+                case 'cache': return `${where} prices published by AWS ${published} · cached ${daysAgo(pricing.fetchedAt)}`;
+                case 'stale': return `${where} prices published by AWS ${published} · cached ${daysAgo(pricing.fetchedAt)} (refresh failed)`;
+                default: return `${where} built-in snapshot published ${published}`;
+            }
+        }
+
+        async function selectRegion(forceRefresh = false) {
+            const token = ++loadToken;
+            const code = regionSelect.value;
+            const region = regionList.find((r) => r.code === code);
+            pricingStatus.textContent = `Loading ${regionName(code)} pricing from AWS…`;
+            showWarning('');
+
+            try {
+                const { pricing, source } = await loadPricing(region, forceRefresh);
+                if (token !== loadToken) return;
+                currentPricing = pricing;
+                pricingStatus.textContent = describeSource(pricing, source);
+                if (source === 'stale') {
+                    showWarning('⚠️ Couldn\'t reach AWS, so these are older cached prices.');
+                } else if (source === 'fallback') {
+                    showWarning('⚠️ Couldn\'t reach the AWS Price List API, so these are built-in us-east-1 prices, which may be out of date.');
+                }
+            } catch (error) {
+                if (token !== loadToken) return;
+                currentPricing = null;
+                pricingStatus.textContent = 'Pricing unavailable';
+                showWarning(`⚠️ Couldn't load pricing for ${escapeHtml(code)}. Check your connection and try <strong>Refresh pricing</strong>.`);
+            }
+            render();
+        }
+
+        async function init() {
+            const initialRegion = restoreFromUrl();
+            regionList = (await loadRegions()).regions;
+            populateRegions(initialRegion);
+            await selectRegion();
+        }
+
+        regionSelect.addEventListener('change', () => selectRegion());
+        [sizeInput, unitSelect, retrievalsInput, objectsInput, latencySelect].forEach((el) => el.addEventListener('input', render));
+        refreshButton.addEventListener('click', async () => {
+            const selected = regionSelect.value;
+            PricingCache.clear();
+            regionList = (await loadRegions(true)).regions;
+            populateRegions(selected);
+            await selectRegion(true);
+        });
+
+        init();
+    </script>
+    <script src="theme.js"></script>
+</body>
+</html>

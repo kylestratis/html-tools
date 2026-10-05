@@ -45,6 +45,17 @@ Estimate token counts and costs for AI model prompts with support for major AI p
 - Model-specific pricing information display
 - Dark mode support with persistent preferences
 
+### [AWS S3 Storage Cost Calculator](s3-cost-calculator.html)
+Compare monthly S3 storage costs across every storage class and find the retrieval frequency where each one becomes the cheapest.
+
+**Features:**
+- Live pricing for every region, fetched straight from the public AWS Price List API
+- Region list cached for 90 days and prices cached for 30 days in localStorage, with a built-in us-east-1 snapshot as an offline fallback
+- Covers Standard, Intelligent-Tiering, Standard-IA, One Zone-IA, Glacier Instant Retrieval, Glacier Flexible Retrieval (Expedited/Standard/Bulk), Glacier Deep Archive (Standard/Bulk) and Express One Zone
+- Break-even ladder showing the cheapest class for each range of monthly retrievals
+- Filter by the retrieval speed you need
+- Shareable URLs that keep your inputs
+
 ## Adding New Tools
 
 Each tool is a standalone HTML file with inline CSS and JavaScript. To add a new tool:

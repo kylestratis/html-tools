@@ -1,0 +1,22 @@
+AWS S3 Storage Cost Calculator - User Prompts
+=============================================
+
+Date: October 5, 2026
+
+---
+
+PROMPT 1:
+On my website I have a section for simple HTML tools where I have a collection of simple, mostly vibe-coded tools that are HTML only or large HTML with very minimal JavaScript. I would like to create a new one in the same style as the other tools. This one is a calculator for AWS S3 storage.
+
+What I'm envisioning is:
+- A drop-down to select the region in question. The regions should be populated by an external call to get all the regions that have S3 available in AWS and that should be cached locally for, say, 60 or 90 days on the user's machine.
+- Two inputs:- The size of the data in question and probably a drop-down for units, going from, I'm guessing, kilobytes up to petabytes.
+- Estimated usage or retrieval times per month of that object.
+
+It should provide an estimated monthly cost using live pricing data, also pulled from AWS where possible and cached locally, probably for 30 days.
+Use that data to compare the monthly costs for regular access, warm access, Glacier access, and any other access modes that S3 provides. Just double-check what those modes are. Make sure we have an object for storing the pricing and caching that.
+Show the break-even point. For a given data size how many monthly retrievals, if any, makes it cheaper to use each mode? Say a 36 GB file or object: how many retrievals is it cheaper to use Glacier, hot storage, warm storage, or whatever the other modes are?
+
+---
+
+END OF CONVERSATION LOG
